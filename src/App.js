@@ -1491,79 +1491,7 @@ function App() {
         </form>
       </main>
 
-      
 
-      {/* Modal de Doação */}
-      {showPaymentModal && (
-        
-        
-        <div
-  className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-  role="dialog"
-  aria-modal="true"
-  aria-labelledby="modal-title"
-  onClick={(e) => {
-    // Fecha se clicar fora do modal
-    if (e.target === e.currentTarget) setShowPaymentModal(false);
-  }}
->
-  <div className="relative w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 shadow-2xl animate-fade-in-scale">
-    
-    {/* Botão X */}
-    <button
-      onClick={() => setShowPaymentModal(false)}
-      className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
-      aria-label="Fechar modal"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
-
-    {/* Título */}
-    <h3 id="modal-title" className="text-2xl font-extrabold text-gray-800 text-center mb-2">
-      Ajude a manter este projeto vivo!
-    </h3>
-    <p className="text-sm text-gray-500 text-center mb-6">
-      Seu apoio faz toda a diferença. Obrigado por fazer parte disso
-    </p>
-
-    {/* QR Code com pulse animado */}
-    <div className="flex justify-center mb-6">
-      <div className="relative">
-        <div className="absolute inset-0 rounded-lg animate-pulse-ring" />
-        <img
-          src="/qrcode.png"
-          alt="QR Code para doação"
-          className="w-44 h-44 object-contain rounded-lg shadow-md relative z-10"
-        />
-      </div>
-    </div>
-
-    {/* Mensagem de incentivo */}
-    <p className="text-gray-600 text-center text-sm mb-4">
-      Se este site te ajudou contribur com uma pequena doação ajuda a pagar a hospedagem (e um café).
-    </p>
-
-    <div className="flex flex-col sm:flex-row gap-3 mt-6">
-      
-      <button
-  onClick={() => {
-    navigator.clipboard.writeText("80eb8e06-493b-4870-9dfc-47ed230c5d16");
-    alert("Copiada! Sua ajuda faz a diferença 🙌");
-  }}
-  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-center"
->
-  copiar chave pix
-</button>
-
-    </div>
-  </div>
-</div>
-
-
-
-      )}
 
   {/* Footer */}
   <footer className="bg-white border-t border-gray-200 py-6 sm:py-8">
