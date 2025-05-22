@@ -1,6 +1,38 @@
 import { useState } from "react";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
+const sanitizeForATS = (text) => {
+  if (!text) return text;
+  
+  // Mapeamento de caracteres especiais para suas versões ASCII
+  const replacements = {
+    '∑': 'SUM', 
+    '≤': '<=',
+    '≥': '>=',
+    '≠': '!=',
+    '―': '-',
+    '–': '-',
+    '—': '-',
+    '“': '"',
+    '”': '"',
+    '‘': "'",
+    '’': "'",
+    '…': '...',
+    '•': '-',
+    '→': '->',
+    '←': '<-',
+    '±': '+/-',
+    'μ': 'u',
+    '°': 'deg'
+  };
+  
+  // Substitui caracteres especiais e remove outros não suportados
+  return text
+    .replace(/[∑≤≥≠―–—“”‘’…•→←±μ°]/g, char => replacements[char] || '')
+    .normalize('NFKD')
+    .replace(/[^\x00-\x7F]/g, ''); // Remove qualquer caractere não-ASCII
+};
+
 function App() {
   // Opções de idioma para a aplicação
   const idiomasApp = [
@@ -479,7 +511,7 @@ function App() {
 
     // Configurações de fonte e cores
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const black = rgb(0, 0, 0);
 
     // Margens e layout
@@ -502,52 +534,56 @@ function App() {
     };
 
     // Funções auxiliares de desenho
-    const drawTitle = (text, size = 16) => {
-      checkForNewPage(size + 8);
-      page.drawText(text.toUpperCase(), {
-        x: marginX,
-        y,
-        size,
-        font: boldFont,
-        color: black,
-        lineHeight: size * 1.2
-      });
-      y -= size + 8;
-    };
+   const drawTitle = (text, size = 16) => {
+  const cleanText = sanitizeForATS(text); // <-- Sanitiza antes de desenhar
+  checkForNewPage(size + 8);
+  page.drawText(cleanText.toUpperCase(), {
+    x: marginX,
+    y,
+    size,
+    font: boldFont,
+    color: black,
+    lineHeight: size * 1.2
+  });
+  y -= size + 8;
+};
 
-    const drawSectionHeader = (text, size = 12) => {
-      checkForNewPage(size + 6);
-      page.drawText(text.toUpperCase(), {
-        x: marginX,
-        y,
-        size,
-        font: boldFont,
-        color: black,
-        lineHeight: size * 1.2
-      });
-      y -= size + 6;
-    };
+const drawSectionHeader = (text, size = 12) => {
+  const cleanText = sanitizeForATS(text); // <-- Sanitiza aqui também
+  checkForNewPage(size + 6);
+  page.drawText(cleanText.toUpperCase(), {
+    x: marginX,
+    y,
+    size,
+    font: boldFont,
+    color: black,
+    lineHeight: size * 1.2
+  });
+  y -= size + 6;
+};
 
-    const drawText = (text, indent = 0, size = 11) => {
-      const lines = Array.isArray(text) ? text : [text || ''];
-      lines.forEach(line => {
-        if (line.trim()) {
-          const formattedLines = formatarTextoParaPDF(line, maxWidth - indent, font, size);
-          formattedLines.forEach(formattedLine => {
-            checkForNewPage(lineHeight);
-            page.drawText(formattedLine, {
-              x: marginX + indent,
-              y,
-              size,
-              font,
-              color: black,
-              lineHeight: size * 1.4
-            });
-            y -= lineHeight;
-          });
-        }
+const drawText = (text, indent = 0, size = 11) => {
+  const lines = Array.isArray(text) ? text : [text || ''];
+  lines.forEach(line => {
+    if (line.trim()) {
+      const cleanLine = sanitizeForATS(line); // <-- Sanitiza cada linha
+      
+      const formattedLines = formatarTextoParaPDF(cleanLine, maxWidth - indent, font, size);
+      formattedLines.forEach(formattedLine => {
+        checkForNewPage(lineHeight);
+        page.drawText(formattedLine, {
+          x: marginX + indent,
+          y,
+          size,
+          font,
+          color: black,
+          lineHeight: size * 1.4
+        });
+        y -= lineHeight;
       });
-    };
+    }
+  });
+};
 
     const drawBullet = (text, indent = 15, size = 11) => {
       checkForNewPage(lineHeight);
