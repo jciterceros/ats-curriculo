@@ -448,6 +448,8 @@ function App() {
   };
 
   const formatarTextoParaPDF = (text, maxWidth, font, fontSize) => {
+  if (!text) return [''];
+  
   const paragraphs = text.split('\n');
   let lines = [];
   
@@ -478,8 +480,7 @@ function App() {
 
 
 
-
- const gerarPDF = async (fromModal = false) => {
+const gerarPDF = async () => {
   const validation = validateForm();
   
   if (!validation.isValid) {
@@ -494,259 +495,431 @@ function App() {
     }
     return;
   }
+
+  setIsGenerating(true);
+  setShowGenerationAnimation(true);
+
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  setShowPaymentModal(true);
   
-  if (!fromModal) {
-    // Mostra a animação primeiro
-    setShowGenerationAnimation(true);
-    
-    // Espera 2 segundos para a animação terminar
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Gera o PDF
-    setIsGenerating(true);
-    try {
-  
+  try {
+    // Criar novo documento PDF
     const pdfDoc = await PDFDocument.create();
-    let page = pdfDoc.addPage([595, 842]); // Tamanho A4 em pontos
+    const page = pdfDoc.addPage([595, 842]); // Tamanho A4 em pontos (72dpi)
     const { width, height } = page.getSize();
-
-    // Configurações de fonte e cores
+    
+    // Configurações de fonte
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const black = rgb(0, 0, 0);
-
-    // Margens e layout
+    
+    // Margens e layout otimizados
     const marginX = 50;
-    const marginY = 50;
+    const marginY = 40; // Margem superior reduzida
     const maxWidth = width - 2 * marginX;
     let y = height - marginY;
-    const lineHeight = 14;
-    const sectionGap = 16;
-    const minY = marginY + 50;
-
-    // Função para verificar nova página
-    const checkForNewPage = (requiredSpace = lineHeight) => {
-      if (y - requiredSpace < minY) {
-        page = pdfDoc.addPage([595, 842]);
-        y = height - marginY;
-        return true;
-      }
-      return false;
-    };
-
-    // Funções auxiliares de desenho
-   const drawTitle = (text, size = 16) => {
-  const cleanText = sanitizeForATS(text); // <-- Sanitiza antes de desenhar
-  checkForNewPage(size + 8);
-  page.drawText(cleanText.toUpperCase(), {
-    x: marginX,
-    y,
-    size,
-    font: boldFont,
-    color: black,
-    lineHeight: size * 1.2
-  });
-  y -= size + 8;
-};
-
-const drawSectionHeader = (text, size = 12) => {
-  const cleanText = sanitizeForATS(text); // <-- Sanitiza aqui também
-  checkForNewPage(size + 6);
-  page.drawText(cleanText.toUpperCase(), {
-    x: marginX,
-    y,
-    size,
-    font: boldFont,
-    color: black,
-    lineHeight: size * 1.2
-  });
-  y -= size + 6;
-};
-
-const drawText = (text, indent = 0, size = 11) => {
-  const lines = Array.isArray(text) ? text : [text || ''];
-  lines.forEach(line => {
-    if (line.trim()) {
-      const cleanLine = sanitizeForATS(line); // <-- Sanitiza cada linha
-      
-      const formattedLines = formatarTextoParaPDF(cleanLine, maxWidth - indent, font, size);
-      formattedLines.forEach(formattedLine => {
-        checkForNewPage(lineHeight);
-        page.drawText(formattedLine, {
-          x: marginX + indent,
-          y,
+    const lineHeight = 12; // Altura de linha reduzida
+    const sectionGap = 10; // Espaço entre seções reduzido
+    const minY = marginY + 30;
+    
+    // Função para desenhar texto com quebra de linha automática (otimizada)
+    const drawText = (text, x, y, size, maxWidth, font, color, lineHeightMultiplier = 1.2) => {
+      const lines = formatarTextoParaPDF(text, maxWidth, font, size);
+      lines.forEach((line, i) => {
+        page.drawText(line, {
+          x,
+          y: y - (i * (size * lineHeightMultiplier)),
           size,
           font,
-          color: black,
-          lineHeight: size * 1.4
+          color,
         });
-        y -= lineHeight;
       });
-    }
-  });
-};
-
-    const drawBullet = (text, indent = 15, size = 11) => {
-      checkForNewPage(lineHeight);
-      page.drawText("•", {
+      return lines.length;
+    };
+    
+    // Função para verificar se precisa de nova página
+    const checkForNewPage = (requiredSpace = lineHeight) => {
+      if (y - requiredSpace < minY) {
+        const newPage = pdfDoc.addPage([595, 842]);
+        y = height - marginY;
+        return newPage;
+      }
+      return null;
+    };
+    
+    // Função para desenhar título de seção (mais compacta)
+    const drawSectionTitle = (title) => {
+      checkForNewPage(lineHeight * 1.5);
+      page.drawText(title.toUpperCase(), {
         x: marginX,
-        y: y + 4,
-        size: size + 2,
+        y,
+        size: 11, // Tamanho reduzido
+        font: boldFont,
+        color: black,
+      });
+      // Linha divisória fina
+      page.drawLine({
+        start: { x: marginX, y: y - 2 },
+        end: { x: marginX + 50, y: y - 2 },
+        thickness: 1,
+        color: black,
+      });
+      y -= lineHeight * 1.2;
+    };
+    
+    // 1. Cabeçalho (Nome e Cargo) - mais compacto
+    const nome = sanitizeForATS(formData.nome);
+    const cargo = sanitizeForATS(formData.cargoDesejado || '');
+    
+    checkForNewPage(lineHeight * 2);
+    page.drawText(nome.toUpperCase(), {
+      x: marginX,
+      y,
+      size: 16, // Tamanho reduzido
+      font: boldFont,
+      color: black,
+    });
+    y -= lineHeight * 1.5;
+    
+    if (cargo) {
+      page.drawText(cargo, {
+        x: marginX,
+        y,
+        size: 12, // Tamanho reduzido
         font,
         color: black,
       });
-      drawText(text, indent, size);
-    };
-
-    const drawDivider = () => {
-      checkForNewPage(sectionGap);
-      y -= sectionGap/2;
-    };
-
-    // Cabeçalho do currículo
-    drawTitle(formData.nome, 18);
-    
-    if (formData.cargoDesejado) {
-      drawSectionHeader(formData.cargoDesejado, 14);
-      y -= 4;
+      y -= lineHeight * 1.2;
     }
-
-    // Informações de contato
+    
+    // 2. Informações de Contato (mais compacto)
     const contactInfo = [
       formData.telefone && `${formData.codigoPais} ${formData.ddd} ${formData.telefone}`,
       formData.email,
       formData.linkedin && `linkedin.com/in/${formData.linkedin}`,
       formData.portfolio && (formData.portfolio.includes('github.com') ? 
-                           `github.com/${formData.portfolio.split('github.com/').pop()}` : 
-                           formData.portfolio),
+                         `github.com/${formData.portfolio.split('github.com/').pop()}` : 
+                         formData.portfolio),
       formData.cidade
-    ].filter(Boolean).join(" | ");
-
-    drawText(contactInfo, 0, 10);
-    drawDivider();
-
-    // Seção de Resumo
+    ].filter(Boolean).join(" • "); // Separador mais discreto
+    
+    const contactLines = drawText(
+      sanitizeForATS(contactInfo),
+      marginX,
+      y,
+      9, // Tamanho de fonte menor
+      maxWidth,
+      font,
+      black,
+      1.1 // Espaçamento reduzido
+    );
+    y -= contactLines * (9 * 1.1);
+    y -= 8; // Espaço reduzido
+    
+    // 3. Resumo Profissional (mais compacto)
     if (formData.resumo) {
-      drawSectionHeader(t.secoesPDF.resumo);
-      drawText(formData.resumo);
-      drawDivider();
+      drawSectionTitle(t.secoesPDF.resumo);
+      const resumoLines = drawText(
+        sanitizeForATS(formData.resumo),
+        marginX,
+        y,
+        10, // Tamanho de fonte menor
+        maxWidth,
+        font,
+        black,
+        1.1 // Espaçamento reduzido
+      );
+      y -= resumoLines * (10 * 1.1);
+      y -= sectionGap;
     }
-
-    // Seção de Experiência Profissional
+    
+    // 4. Experiência Profissional (formato otimizado)
     if (formData.experiencias.length > 0) {
-      drawSectionHeader(t.secoesPDF.experiencia);
+      drawSectionTitle(t.secoesPDF.experiencia);
       
-      formData.experiencias.forEach((exp, index) => {
-        if (exp.cargo || exp.empresa) {
-          // Cabeçalho da experiência
-          const header = [
-            exp.cargo,
-            exp.empresa && ` - ${exp.empresa}`,
-            exp.periodo && ` (${exp.periodo})`
-          ].filter(Boolean).join("");
+      formData.experiencias.forEach((exp, idx) => {
+        // Cabeçalho compacto da experiência
+        const headerParts = [
+          exp.cargo && `${exp.cargo}`,
+          exp.empresa && `@ ${exp.empresa}`,
+          exp.periodo && ` | ${exp.periodo}`
+        ].filter(Boolean);
+        
+        const header = headerParts.join(' ');
+        const headerLines = drawText(
+          sanitizeForATS(header),
+          marginX,
+          y,
+          10, // Tamanho reduzido
+          maxWidth,
+          boldFont, // Negrito para cabeçalho
+          black,
+          1.1
+        );
+        y -= headerLines * (10 * 1.1);
+        
+        // Tecnologias em uma linha só
+        if (exp.tecnologias) {
+          const techText = `Tecnologias: ${exp.tecnologias}`;
+          const techLines = drawText(
+            sanitizeForATS(techText),
+            marginX + 10, // Indentação
+            y,
+            9, // Tamanho menor
+            maxWidth - 10,
+            font,
+            black,
+            1.1
+          );
+          y -= techLines * (9 * 1.1);
+        }
+        
+        // Atividades (com marcadores compactos)
+        if (exp.atividades) {
+          const atividades = exp.atividades.split('\n')
+            .filter(a => a.trim())
+            .map(a => a.trim().replace(/^[-•*]\s*/, ''));
           
-          drawText(header, 0, 12);
-          
-          // Tecnologias utilizadas
-          if (exp.tecnologias) {
-            drawText(`Tecnologias: ${exp.tecnologias}`, 0, 10);
-            y -= 6;
-          }
-
-          // Atividades realizadas
-          if (exp.atividades) {
-            drawText("Atividades:", 0, 11);
-            exp.atividades.split('\n')
-              .filter(a => a.trim())
-              .forEach(atividade => {
-                drawBullet(atividade.trim().replace(/^[-•*]\s*/, ''));
+          if (atividades.length > 0) {
+            atividades.forEach(atividade => {
+              checkForNewPage();
+              // Marcador compacto
+              page.drawText('•', {
+                x: marginX,
+                y: y + 1, // Ajuste fino de posição
+                size: 9,
+                font,
+                color: black,
               });
-            y -= 6;
-          }
-
-          // Resultados alcançados
-          if (exp.resultados) {
-            drawText("Resultados:", 0, 11);
-            exp.resultados.split('\n')
-              .filter(r => r.trim())
-              .forEach(resultado => {
-                drawBullet(resultado.trim().replace(/^[-•*]\s*/, ''));
-              });
-          }
-          
-          // Espaço entre experiências
-          if (index < formData.experiencias.length - 1) {
-            y -= 12;
-            drawDivider();
+              const lines = drawText(
+                sanitizeForATS(atividade),
+                marginX + 8, // Indentação reduzida
+                y,
+                9, // Tamanho menor
+                maxWidth - 8,
+                font,
+                black,
+                1.1
+              );
+              y -= lines * (9 * 1.1);
+            });
           }
         }
+        
+        // Resultados (compactos)
+        if (exp.resultados) {
+          const resultados = exp.resultados.split('\n')
+            .filter(r => r.trim())
+            .map(r => r.trim().replace(/^[-•*]\s*/, ''));
+          
+          if (resultados.length > 0) {
+            resultados.forEach(resultado => {
+              checkForNewPage();
+              // Marcador compacto
+              page.drawText('•', {
+                x: marginX,
+                y: y + 1,
+                size: 9,
+                font,
+                color: black,
+              });
+              const lines = drawText(
+                sanitizeForATS(resultado),
+                marginX + 8,
+                y,
+                9,
+                maxWidth - 8,
+                font,
+                black,
+                1.1
+              );
+              y -= lines * (9 * 1.1);
+            });
+          }
+        }
+        
+        // Espaço entre experiências reduzido
+        if (idx < formData.experiencias.length - 1) {
+          y -= 6;
+          checkForNewPage();
+        }
       });
-      drawDivider();
+      y -= sectionGap;
     }
-
-    // Seção de Habilidades
-    if (formData.habilidades.length > 0) {
-      drawSectionHeader(t.secoesPDF.habilidades);
-      
-      // Agrupar habilidades removendo duplicatas
-      const uniqueSkills = [...new Set(formData.habilidades
-        .map(s => s.trim())
-        .filter(s => s.length > 0))];
-      
-      uniqueSkills.forEach(skill => {
-        drawBullet(skill);
-      });
-      
-      drawDivider();
-    }
-
-    // Seção de Formação Acadêmica
+    
+    // 5. Formação Acadêmica (compacta)
     if (formData.formacoes.some(f => f.curso || f.instituicao)) {
-      drawSectionHeader(t.secoesPDF.formacao);
+      drawSectionTitle(t.secoesPDF.formacao);
       
       formData.formacoes.forEach(form => {
         if (form.curso || form.instituicao) {
           const tipoCurso = tiposCurso.find(t => t.valor === form.tipo)?.label || '';
-          const title = [
-            tipoCurso && `${tipoCurso} -`,
-            form.curso,
-            form.instituicao && ` - ${form.instituicao}`,
-            form.periodo && ` (${form.periodo})`
-          ].filter(Boolean).join(" ");
+          const titleParts = [
+            tipoCurso && `${tipoCurso}`,
+            form.curso && `em ${form.curso}`,
+            form.instituicao && `@ ${form.instituicao}`,
+            form.periodo && `(${form.periodo})`
+          ].filter(Boolean);
           
-          drawBullet(title);
+          const title = titleParts.join(' ');
+          checkForNewPage();
+          page.drawText('•', {
+            x: marginX,
+            y: y + 1,
+            size: 9,
+            font,
+            color: black,
+          });
+          const lines = drawText(
+            sanitizeForATS(title),
+            marginX + 8,
+            y,
+            9,
+            maxWidth - 8,
+            font,
+            black,
+            1.1
+          );
+          y -= lines * (9 * 1.1);
         }
       });
-      drawDivider();
+      y -= sectionGap;
     }
-
-    // Seção de Idiomas
+    
+    // 6. Habilidades Técnicas (em colunas)
+    if (formData.habilidades.length > 0) {
+      drawSectionTitle(t.secoesPDF.habilidades);
+      
+      // Remover duplicatas e ordenar
+      const uniqueSkills = [...new Set(formData.habilidades
+        .map(s => s.trim())
+        .filter(s => s.length > 0))];
+      
+      // Dividir habilidades em 2 colunas para economizar espaço
+      const middleIndex = Math.ceil(uniqueSkills.length / 2);
+      const column1 = uniqueSkills.slice(0, middleIndex);
+      const column2 = uniqueSkills.slice(middleIndex);
+      
+      const columnWidth = (maxWidth - 10) / 2; // 10px de espaço entre colunas
+      let currentY = y;
+      
+      // Desenhar coluna 1
+      column1.forEach(skill => {
+        checkForNewPage();
+        page.drawText('•', {
+          x: marginX,
+          y: currentY + 1,
+          size: 9,
+          font,
+          color: black,
+        });
+        drawText(
+          sanitizeForATS(skill),
+          marginX + 8,
+          currentY,
+          9,
+          columnWidth - 8,
+          font,
+          black,
+          1.1
+        );
+        currentY -= 9 * 1.1;
+      });
+      
+      // Desenhar coluna 2 (se houver)
+      if (column2.length > 0) {
+        currentY = y; // Reset para topo
+        column2.forEach(skill => {
+          checkForNewPage();
+          page.drawText('•', {
+            x: marginX + columnWidth + 10,
+            y: currentY + 1,
+            size: 9,
+            font,
+            color: black,
+          });
+          drawText(
+            sanitizeForATS(skill),
+            marginX + columnWidth + 18,
+            currentY,
+            9,
+            columnWidth - 8,
+            font,
+            black,
+            1.1
+          );
+          currentY -= 9 * 1.1;
+        });
+      }
+      
+      y = currentY;
+      y -= sectionGap;
+    }
+    
+    // 7. Idiomas (compacto)
     if (formData.idiomas.some(i => i.idioma)) {
-      drawSectionHeader(t.secoesPDF.idiomas);
+      drawSectionTitle(t.secoesPDF.idiomas);
       
       formData.idiomas.forEach(idioma => {
         if (idioma.idioma) {
           const text = [
             idioma.idioma,
-            idioma.nivel && ` (${idioma.nivel})`
-          ].filter(Boolean).join("");
-          drawBullet(text);
+            idioma.nivel && `(${idioma.nivel})`
+          ].filter(Boolean).join(" ");
+          checkForNewPage();
+          page.drawText('•', {
+            x: marginX,
+            y: y + 1,
+            size: 9,
+            font,
+            color: black,
+          });
+          const lines = drawText(
+            sanitizeForATS(text),
+            marginX + 8,
+            y,
+            9,
+            maxWidth - 8,
+            font,
+            black,
+            1.1
+          );
+          y -= lines * (9 * 1.1);
         }
       });
-      drawDivider();
+      y -= sectionGap;
     }
-
-    // Seção de Certificações
+    
+    // 8. Certificações (compacto)
     if (formData.certificacoes.length > 0) {
-      drawSectionHeader(t.secoesPDF.certificacoes);
+      drawSectionTitle(t.secoesPDF.certificacoes);
       
       formData.certificacoes
         .filter(c => c.trim())
         .forEach(cert => {
-          drawBullet(cert);
+          checkForNewPage();
+          page.drawText('•', {
+            x: marginX,
+            y: y + 1,
+            size: 9,
+            font,
+            color: black,
+          });
+          const lines = drawText(
+            sanitizeForATS(cert),
+            marginX + 8,
+            y,
+            9,
+            maxWidth - 8,
+            font,
+            black,
+            1.1
+          );
+          y -= lines * (9 * 1.1);
         });
     }
-
+    
     // Gerar e baixar o PDF
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -756,25 +929,15 @@ const drawText = (text, indent = 0, size = 11) => {
     link.click();
     
     setSuccessMessage(t.mensagens.sucesso);
-    setTimeout(() => setSuccessMessage(""), 3000);
-  
-    setShowPaymentModal(true);
-    } catch (error) {
-      console.error("Erro ao gerar PDF:", error);
-    } finally {
-      setIsGenerating(false);
-      setShowGenerationAnimation(false);
-    }
+    setTimeout(() => setSuccessMessage(""), 10000);
+    
+  } catch (error) {
+    console.error("Erro ao gerar PDF:", error);
+  } finally {
+    setIsGenerating(false);
+    setShowGenerationAnimation(false);
   }
 };
-
-
-
-
-
-
-
-
 
 
 
