@@ -3,6 +3,7 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 const sanitizeForATS = (text) => {
   if (!text) return text;
+  if (typeof text !== 'string') return "";
   
   // Mapeamento de caracteres especiais para suas versões ASCII
   const replacements = {
@@ -29,8 +30,6 @@ const sanitizeForATS = (text) => {
   // Substitui caracteres especiais e remove outros não suportados
   return text
     .replace(/[∑≤≥≠―–—“”‘’…•→←±μ°]/g, char => replacements[char] || '')
-    .normalize('NFKD')
-    .replace(/[^\x00-\x7F]/g, ''); // Remove qualquer caractere não-ASCII
 };
 
 function App() {
@@ -54,7 +53,7 @@ function App() {
         "Destaque suas principais habilidades técnicas"
       ],
       campos: {
-        nome: "Nome Completo*",
+        nome: "Informações Pessoais",
         cargoDesejado: "Cargo Desejado",
         codigoPais: "Código do País",
         ddd: "DDD",
@@ -68,7 +67,10 @@ function App() {
         formacao: "Formação Acadêmica",
         habilidades: "Habilidades Técnicas",
         idiomas: "Idiomas",
-        certificacoes: "Certificações",
+        certificacoes: "Certificações/Cursos",
+dataCertificacao: "Data",
+cargaHoraria: "Carga Horária",
+descricaoCertificacao: "Descrição",
         tipoFormacao: "Tipo de Formação",
         curso: "Curso*",
         instituicao: "Instituição*",
@@ -80,7 +82,7 @@ function App() {
         resultados: "Resultados alcançados (com métricas)",
         idioma: "Idioma",
         nivel: "Nível",
-        certificacao: "Certificação"
+        certificacao: "Certificação",
       },
       placeholders: {
         nome: "Ex: João da Silva",
@@ -102,8 +104,14 @@ function App() {
         resultados: "Ex: Reduzi o tempo de carregamento em 40% através de...",
         habilidades: "Ex: JavaScript, React, Node.js, HTML/CSS, Git, AWS, Docker",
         idioma: "Ex: Inglês",
-        certificacao: "Ex: Certificação AWS Cloud Practitioner"
-      },
+        certificacao: "Ex: Certificação AWS Cloud Practitioner",
+        linkedin: "seuperfil",
+  github: "seu-usuario",
+  gitlab: "seu-usuario",
+  behance: "seu-usuario",
+  portfolio: "seusite.com",
+  outro: "URL completo"
+},
       botoes: {
         adicionarExperiencia: "Adicionar Experiência",
         adicionarFormacao: "Adicionar Formação",
@@ -189,8 +197,14 @@ function App() {
         resultados: "Ex: Reduced loading time by 40% through...",
         habilidades: "Ex: JavaScript, React, Node.js, HTML/CSS, Git, AWS, Docker",
         idioma: "Ex: English",
-        certificacao: "Ex: AWS Cloud Practitioner Certification"
-      },
+        certificacao: "Ex: AWS Cloud Practitioner Certification",
+        linkedin: "yourprofile",
+  github: "your-username",
+  gitlab: "your-username",
+  behance: "your-username",
+  portfolio: "yourwebsite.com",
+  outro: "Full URL"
+},
       botoes: {
         adicionarExperiencia: "Add Experience",
         adicionarFormacao: "Add Education",
@@ -276,8 +290,14 @@ function App() {
         resultados: "Ej: Reduje el tiempo de carga en 40% mediante...",
         habilidades: "Ej: JavaScript, React, Node.js, HTML/CSS, Git, AWS, Docker",
         idioma: "Ej: Inglés",
-        certificacao: "Ej: Certificación AWS Cloud Practitioner"
-      },
+        certificacao: "Ej: Certificación AWS Cloud Practitioner",
+      linkedin: "superfil",
+  github: "su-usuario",
+  gitlab: "su-usuario",
+  behance: "su-usuario",
+  portfolio: "sutitio.com",
+  outro: "URL completa"
+},
       botoes: {
         adicionarExperiencia: "Añadir Experiencia",
         adicionarFormacao: "Añadir Formación",
@@ -322,33 +342,112 @@ function App() {
   ];
 
   const tiposCurso = [
-    { valor: "superior", label: "Ensino Superior" },
-    { valor: "tecnologo", label: "Tecnólogo" },
-    { valor: "medio", label: "Ensino Médio" },
-    { valor: "tecnico", label: "Técnico" },
-    { valor: "pos", label: "Pós-Graduação" },
-    { valor: "mestrado", label: "Mestrado" },
-    { valor: "doutorado", label: "Doutorado" },
-    { valor: "outro", label: "Outro" }
-  ];
+  { 
+    valor: "superior", 
+    label: "Ensino Superior em",
+    label_en: "Bachelor's Degree in",
+    label_es: "Licenciatura en"
+  },
+  { 
+    valor: "tecnologo", 
+    label: "Tecnólogo em",
+    label_en: "Technology Degree in",
+    label_es: "Tecnólogo en"
+  },
+  { 
+    valor: "medio", 
+    label: "Ensino Médio",
+    label_en: "High School",
+    label_es: "Bachillerato"
+  },
+  { 
+    valor: "tecnico", 
+    label: "Curso Técnico em",
+    label_en: "Technical Course in",
+    label_es: "Curso Técnico en"
+  },
+  { 
+    valor: "pos", 
+    label: "Pós-Graduação em",
+    label_en: "Postgraduate in",
+    label_es: "Posgrado en"
+  },
+  { 
+    valor: "mestrado", 
+    label: "Mestrado em",
+    label_en: "Master's Degree in",
+    label_es: "Máster en"
+  },
+  { 
+    valor: "doutorado", 
+    label: "Doutorado em",
+    label_en: "PhD in",
+    label_es: "Doctorado en"
+  },
+];
 
-  const [formData, setFormData] = useState({
-    nome: "",
-    telefone: "",
-    ddd: "",
-    codigoPais: "+55",
-    cidade: "",
-    email: "",
-    linkedin: "",
-    portfolio: "",
-    cargoDesejado: "",
-    resumo: "",
-    experiencias: [],
-    formacoes: [{ tipo: "superior", curso: "", instituicao: "", periodo: "" }],
-    habilidades: [],
-    certificacoes: [],
-    idiomas: [{ idioma: "", nivel: "" }],
-  });
+const [formData, setFormData] = useState({
+  nome: "",
+  telefone: "",
+  ddd: "",
+  codigoPais: "+55",
+  cidade: "",
+  email: "",
+  links: [{ tipo: "linkedin", url: "" }],
+  cargoDesejado: "",
+  resumo: "",
+  experiencias: [],
+  formacoes: [{ 
+    tipo: "superior", 
+    curso: "", 
+    instituicao: "", 
+    mesInicio: "",
+    anoInicio: "",
+    mesFim: "",
+    anoFim: "",
+    emAndamento: false,
+    descricao: "" 
+  }],
+  habilidades: [],
+  certificacoes: [{
+  titulo: "",
+  emissor: "",
+  data: "",
+  cargaHoraria: "",
+  descricao: ""
+}],
+  idiomas: [{ idioma: "", nivel: "" }],
+});
+
+const meses = [
+  { valor: "01", label: "Janeiro" },
+  { valor: "02", label: "Fevereiro" },
+  { valor: "03", label: "Março" },
+  { valor: "04", label: "Abril" },
+  { valor: "05", label: "Maio" },
+  { valor: "06", label: "Junho" },
+  { valor: "07", label: "Julho" },
+  { valor: "08", label: "Agosto" },
+  { valor: "09", label: "Setembro" },
+  { valor: "10", label: "Outubro" },
+  { valor: "11", label: "Novembro" },
+  { valor: "12", label: "Dezembro" }
+];
+
+const statusFormacao = [
+  { valor: "completo", label: "Completo" },
+  { valor: "andamento", label: "Em andamento" },
+  { valor: "trancado", label: "Trancado" }
+];
+
+const tiposRedesSociais = [
+  { valor: "linkedin", label: "LinkedIn", prefixo: "linkedin.com/in/" },
+  { valor: "github", label: "GitHub", prefixo: "github.com/" },
+  { valor: "gitlab", label: "GitLab", prefixo: "gitlab.com/" },
+  { valor: "behance", label: "Behance", prefixo: "behance.net/" },
+  { valor: "portfolio", label: "Portfolio", prefixo: "" },
+  { valor: "outro", label: "outro", prefixo: "" },
+];
 
   const [errors, setErrors] = useState({});
   const [isGenerating, setIsGenerating] = useState(false);
@@ -363,7 +462,7 @@ function App() {
   // Obter textos traduzidos com base no idioma selecionado
   const t = textos[idiomaApp];
 
-  const validateForm = () => {
+const validateForm = () => {
   const newErrors = {};
   let firstErrorSection = null;
   
@@ -390,10 +489,14 @@ function App() {
   
   // Validação das formações (seção "formacao")
   formData.formacoes.forEach((form, idx) => {
-    if (!form.curso.trim()) {
+    // Só valida curso se não for ensino médio (ou equivalente em outros idiomas)
+    const isEnsinoMedio = form.tipo === "medio";
+    
+    if (!isEnsinoMedio && !form.curso.trim()) {
       newErrors[`formacao_curso_${idx}`] = t.campos.curso.replace("*", "") + " é obrigatório";
       if (!firstErrorSection) firstErrorSection = "formacao";
     }
+    
     if (!form.instituicao.trim()) {
       newErrors[`formacao_instituicao_${idx}`] = t.campos.instituicao.replace("*", "") + " é obrigatória";
       if (!firstErrorSection) firstErrorSection = "formacao";
@@ -428,13 +531,26 @@ function App() {
     }));
   };
 
-  const removeField = (field, index) => {
-    setFormData(prev => {
-      const newArray = [...prev[field]];
-      newArray.splice(index, 1);
-      return { ...prev, [field]: newArray };
-    });
-  };
+  // Certifique-se que após remover, o array não fique vazio
+const removeField = (field, index) => {
+  setFormData(prev => {
+    const newArray = [...prev[field]];
+    newArray.splice(index, 1);
+    
+    // Se for certificações e ficar vazio, adicione um objeto vazio
+    if (field === "certificacoes" && newArray.length === 0) {
+      newArray.push({ 
+        titulo: "", 
+        emissor: "", 
+        data: "", 
+        cargaHoraria: "", 
+        descricao: "" 
+      });
+    }
+    
+    return { ...prev, [field]: newArray };
+  });
+};
 
   const handleHabilidadesChange = (e) => {
     const value = e.target.value;
@@ -495,6 +611,29 @@ const gerarPDF = async () => {
     }
     return;
   }
+
+
+const formatarMes = (numeroMes, idioma = 'pt') => {  // 'pt' como padrão
+  const meses = {
+    pt: [
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ],
+    en: [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ],
+    es: [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ]
+  };
+  
+  const idiomaValido = meses[idioma] ? idioma : 'pt';
+  return meses[idiomaValido][parseInt(numeroMes) - 1] || '';
+};
+
+
 
   setIsGenerating(true);
   setShowGenerationAnimation(true);
@@ -595,14 +734,19 @@ const gerarPDF = async () => {
     
     // 2. Informações de Contato (mais compacto)
     const contactInfo = [
-      formData.telefone && `${formData.codigoPais} ${formData.ddd} ${formData.telefone}`,
-      formData.email,
-      formData.linkedin && `linkedin.com/in/${formData.linkedin}`,
-      formData.portfolio && (formData.portfolio.includes('github.com') ? 
-                         `github.com/${formData.portfolio.split('github.com/').pop()}` : 
-                         formData.portfolio),
-      formData.cidade
-    ].filter(Boolean).join(" • "); // Separador mais discreto
+  formData.telefone && `${formData.codigoPais} ${formData.ddd} ${formData.telefone}`,
+  formData.email,
+  formData.cidade,
+  ...formData.links
+    .filter(link => link.url)
+    .map(link => {
+      const rede = tiposRedesSociais.find(t => t.valor === link.tipo);
+      if (link.tipo === 'outro') {
+        return link.url; // Mostra apenas a URL para tipo "outro"
+      }
+      return rede ? `${rede.label}: ${rede.prefixo}${link.url}` : link.url;
+    })
+].filter(Boolean).join(" • ");
     
     const contactLines = drawText(
       sanitizeForATS(contactInfo),
@@ -633,136 +777,69 @@ const gerarPDF = async () => {
       y -= resumoLines * (10 * 1.1);
       y -= sectionGap;
     }
+
     
-    // 4. Experiência Profissional (formato otimizado)
-    if (formData.experiencias.length > 0) {
-      drawSectionTitle(t.secoesPDF.experiencia);
-      
-      formData.experiencias.forEach((exp, idx) => {
-        // Cabeçalho compacto da experiência
-        const headerParts = [
-          exp.cargo && `${exp.cargo}`,
-          exp.empresa && `@ ${exp.empresa}`,
-          exp.periodo && ` | ${exp.periodo}`
-        ].filter(Boolean);
-        
-        const header = headerParts.join(' ');
-        const headerLines = drawText(
-          sanitizeForATS(header),
-          marginX,
-          y,
-          10, // Tamanho reduzido
-          maxWidth,
-          boldFont, // Negrito para cabeçalho
-          black,
-          1.1
-        );
-        y -= headerLines * (10 * 1.1);
-        
-        // Tecnologias em uma linha só
-        if (exp.tecnologias) {
-          const techText = `Tecnologias: ${exp.tecnologias}`;
-          const techLines = drawText(
-            sanitizeForATS(techText),
-            marginX + 10, // Indentação
-            y,
-            9, // Tamanho menor
-            maxWidth - 10,
-            font,
-            black,
-            1.1
-          );
-          y -= techLines * (9 * 1.1);
-        }
-        
-        // Atividades (com marcadores compactos)
-        if (exp.atividades) {
-          const atividades = exp.atividades.split('\n')
-            .filter(a => a.trim())
-            .map(a => a.trim().replace(/^[-•*]\s*/, ''));
-          
-          if (atividades.length > 0) {
-            atividades.forEach(atividade => {
-              checkForNewPage();
-              // Marcador compacto
-              page.drawText('•', {
-                x: marginX,
-                y: y + 1, // Ajuste fino de posição
-                size: 9,
-                font,
-                color: black,
-              });
-              const lines = drawText(
-                sanitizeForATS(atividade),
-                marginX + 8, // Indentação reduzida
-                y,
-                9, // Tamanho menor
-                maxWidth - 8,
-                font,
-                black,
-                1.1
-              );
-              y -= lines * (9 * 1.1);
-            });
-          }
-        }
-        
-        // Resultados (compactos)
-        if (exp.resultados) {
-          const resultados = exp.resultados.split('\n')
-            .filter(r => r.trim())
-            .map(r => r.trim().replace(/^[-•*]\s*/, ''));
-          
-          if (resultados.length > 0) {
-            resultados.forEach(resultado => {
-              checkForNewPage();
-              // Marcador compacto
-              page.drawText('•', {
-                x: marginX,
-                y: y + 1,
-                size: 9,
-                font,
-                color: black,
-              });
-              const lines = drawText(
-                sanitizeForATS(resultado),
-                marginX + 8,
-                y,
-                9,
-                maxWidth - 8,
-                font,
-                black,
-                1.1
-              );
-              y -= lines * (9 * 1.1);
-            });
-          }
-        }
-        
-        // Espaço entre experiências reduzido
-        if (idx < formData.experiencias.length - 1) {
-          y -= 6;
-          checkForNewPage();
-        }
-      });
-      y -= sectionGap;
+if (formData.experiencias.length > 0) {
+  drawSectionTitle(t.secoesPDF.experiencia);
+  
+  formData.experiencias.forEach((exp, idx) => {
+    // Formata o período
+    const mesInicio = formatarMes(exp.mesInicio);
+    const mesFim = formatarMes(exp.mesFim);
+    
+const periodoExp = [
+  exp.mesInicio && `${formatarMes(exp.mesInicio, idiomaApp)} ${exp.anoInicio}`,
+  exp.atual ? 
+    (idiomaApp === 'en' ? 'Present' : 
+     idiomaApp === 'es' ? 'Actual' : 'Atual') : 
+    (exp.mesFim && exp.anoFim ? `${formatarMes(exp.mesFim, idiomaApp)} ${exp.anoFim}` : "")
+].filter(Boolean).join(" - ");
+
+const headerParts = [
+  exp.cargo && `${exp.cargo}`,
+  exp.empresa && `, ${exp.empresa}`,
+  periodoExp && ` (${periodoExp})`
+].filter(Boolean);
+
+const header = headerParts.join('');
+
+    checkForNewPage(lineHeight * 1.5);
+    const headerLines = drawText(
+      sanitizeForATS(header),
+      marginX,
+      y,
+      10,
+      maxWidth,
+      boldFont,
+      black,
+      1.1
+    );
+    y -= headerLines * (10 * 1.1);
+
+    // Tecnologias (mantido igual)
+    if (exp.tecnologias) {
+      const techText = `Tecnologias: ${exp.tecnologias}`;
+      const techLines = drawText(
+        sanitizeForATS(techText),
+        marginX + 10,
+        y,
+        9,
+        maxWidth - 10,
+        font,
+        black,
+        1.1
+      );
+      y -= techLines * (9 * 1.1);
     }
-    
-    // 5. Formação Acadêmica (compacta)
-    if (formData.formacoes.some(f => f.curso || f.instituicao)) {
-      drawSectionTitle(t.secoesPDF.formacao);
+
+    // Atividades (mantido igual)
+    if (exp.atividades) {
+      const atividades = exp.atividades.split('\n')
+        .filter(a => a.trim())
+        .map(a => a.trim().replace(/^[-•*]\s*/, ''));
       
-      formData.formacoes.forEach(form => {
-        if (form.curso || form.instituicao) {
-          const tipoCurso = tiposCurso.find(t => t.valor === form.tipo)?.label || '';
-          const titleParts = [
-            tipoCurso && `${tipoCurso}`,
-            form.curso && `em ${form.curso}`,
-            form.instituicao && `@ ${form.instituicao}`,
-            form.periodo && `(${form.periodo})`
-          ].filter(Boolean);
-          
-          const title = titleParts.join(' ');
+      if (atividades.length > 0) {
+        atividades.forEach(atividade => {
           checkForNewPage();
           page.drawText('•', {
             x: marginX,
@@ -772,7 +849,7 @@ const gerarPDF = async () => {
             color: black,
           });
           const lines = drawText(
-            sanitizeForATS(title),
+            sanitizeForATS(atividade),
             marginX + 8,
             y,
             9,
@@ -782,10 +859,143 @@ const gerarPDF = async () => {
             1.1
           );
           y -= lines * (9 * 1.1);
-        }
-      });
-      y -= sectionGap;
+        });
+      }
     }
+
+    // Resultados (mantido igual)
+    if (exp.resultados) {
+      const resultados = exp.resultados.split('\n')
+        .filter(r => r.trim())
+        .map(r => r.trim().replace(/^[-•*]\s*/, ''));
+      
+      if (resultados.length > 0) {
+        resultados.forEach(resultado => {
+          checkForNewPage();
+          page.drawText('•', {
+            x: marginX,
+            y: y + 1,
+            size: 9,
+            font,
+            color: black,
+          });
+          const lines = drawText(
+            sanitizeForATS(resultado),
+            marginX + 8,
+            y,
+            9,
+            maxWidth - 8,
+            font,
+            black,
+            1.1
+          );
+          y -= lines * (9 * 1.1);
+        });
+      }
+    }
+
+    if (idx < formData.experiencias.length - 1) {
+      y -= 6;
+      checkForNewPage();
+    }
+  });
+  y -= sectionGap;
+}
+    
+
+// 5. Formação Acadêmica (compacta)
+if (formData.formacoes.some(f => f.curso || f.instituicao)) {
+  drawSectionTitle(t.secoesPDF.formacao);
+  
+  formData.formacoes.forEach(form => {
+    if (form.curso || form.instituicao) {
+      const tipoCurso = tiposCurso.find(t => t.valor === form.tipo);
+      let tipoFormacao = tipoCurso?.label || '';
+
+      if (idiomaApp === 'en') {
+        tipoFormacao = tipoCurso?.label_en || tipoCurso?.label || '';
+      } else if (idiomaApp === 'es') {
+        tipoFormacao = tipoCurso?.label_es || tipoCurso?.label || '';
+      }
+
+      const mesInicio = formatarMes(form.mesInicio, idiomaApp);
+      const mesFim = formatarMes(form.mesFim, idiomaApp);
+
+      let periodoFormatado = '';
+      if (form.status === "andamento") {
+        periodoFormatado = `${mesInicio} ${form.anoInicio} - ${
+          idiomaApp === 'en' ? 'Present' : 
+          idiomaApp === 'es' ? 'Actual' : 'Presente'
+        }`;
+      } else if (form.status === "trancado") {
+        periodoFormatado = `${mesInicio} ${form.anoInicio} - ${
+          idiomaApp === 'en' ? 'On hold' : 
+          idiomaApp === 'es' ? 'En pausa' : 'Trancado'
+        }`;
+      } else if (form.mesFim && form.anoFim) {
+        periodoFormatado = `${mesInicio} ${form.anoInicio} - ${mesFim} ${form.anoFim}`;
+      } else {
+        periodoFormatado = `${mesInicio} ${form.anoInicio}`;
+      }
+
+// Linha 1: Tipo de formação + curso (se houver)
+checkForNewPage();
+const linha1 = form.curso ? `${tipoFormacao} ${form.curso}` : tipoFormacao;
+page.drawText(linha1, {
+  x: marginX,
+  y,
+  size: 10,
+  font: boldFont,
+  color: black,
+});
+y -= lineHeight * 1.1;
+
+      // Linha 2: Instituição (só se existir)
+      if (form.instituicao) {
+        checkForNewPage();
+        page.drawText(form.instituicao, {
+          x: marginX,
+          y,
+          size: 9,
+          font: font,
+          color: black,
+        });
+        y -= lineHeight * 1.1;
+      }
+
+      // Linha 3: Período
+      checkForNewPage();
+      page.drawText(periodoFormatado, {
+        x: marginX,
+        y,
+        size: 9,
+        font: font,
+        color: black,
+      });
+      y -= lineHeight * 1.1;
+
+      // Descrição (se existir)
+      if (form.descricao) {
+        y -= 4; // Espaço antes da descrição
+        const descLines = drawText(
+          sanitizeForATS(form.descricao),
+          marginX,
+          y,
+          8, // Tamanho de fonte menor para descrição
+          maxWidth,
+          font,
+          black,
+          1.1
+        );
+        y -= descLines * (8 * 1.1);
+      }
+
+      y -= 8; // Espaço entre formações
+    }
+  });
+  y -= sectionGap;
+}
+
     
     // 6. Habilidades Técnicas (em colunas)
     if (formData.habilidades.length > 0) {
@@ -891,34 +1101,79 @@ const gerarPDF = async () => {
       y -= sectionGap;
     }
     
-    // 8. Certificações (compacto)
-    if (formData.certificacoes.length > 0) {
-      drawSectionTitle(t.secoesPDF.certificacoes);
+// Na seção de certificações do gerarPDF, substitua por:
+if (formData.certificacoes.some(c => c.titulo && c.titulo.trim())) {
+  drawSectionTitle(t.secoesPDF.certificacoes);
+  
+  formData.certificacoes
+    .filter(c => c.titulo && c.titulo.trim())
+    .forEach(cert => {
+      checkForNewPage();
       
-      formData.certificacoes
-        .filter(c => c.trim())
-        .forEach(cert => {
-          checkForNewPage();
-          page.drawText('•', {
-            x: marginX,
-            y: y + 1,
-            size: 9,
-            font,
-            color: black,
-          });
-          const lines = drawText(
-            sanitizeForATS(cert),
-            marginX + 8,
-            y,
-            9,
-            maxWidth - 8,
-            font,
-            black,
-            1.1
-          );
-          y -= lines * (9 * 1.1);
-        });
-    }
+      // Título e Emissor
+      const tituloEmissor = [
+        cert.titulo,
+        cert.emissor && `(${cert.emissor})`
+      ].filter(Boolean).join(" ");
+      
+      page.drawText('•', {
+        x: marginX,
+        y: y + 1,
+        size: 9,
+        font,
+        color: black,
+      });
+      
+      const lines1 = drawText(
+        sanitizeForATS(tituloEmissor),
+        marginX + 8,
+        y,
+        9,
+        maxWidth - 8,
+        font,
+        black,
+        1.1
+      );
+      y -= lines1 * (9 * 1.1);
+      
+      // Data e Carga Horária
+      if (cert.data || cert.cargaHoraria) {
+        const dataCarga = [
+          cert.data,
+          cert.cargaHoraria && `- ${cert.cargaHoraria}`
+        ].filter(Boolean).join(" ");
+        
+        const lines2 = drawText(
+          sanitizeForATS(dataCarga),
+          marginX + 8,
+          y,
+          8,
+          maxWidth - 8,
+          font,
+          rgb(0.3, 0.3, 0.3),
+          1.1
+        );
+        y -= lines2 * (8 * 1.1);
+      }
+      
+      // Descrição
+      if (cert.descricao) {
+        const descLines = drawText(
+          sanitizeForATS(cert.descricao),
+          marginX + 8,
+          y,
+          8,
+          maxWidth - 8,
+          font,
+          black,
+          1.1
+        );
+        y -= descLines * (8 * 1.1);
+      }
+      
+      y -= 4;
+    });
+}
     
     // Gerar e baixar o PDF
     const pdfBytes = await pdfDoc.save();
@@ -941,167 +1196,436 @@ const gerarPDF = async () => {
 
 
 
-  const renderExperienceFields = () => {
-    return formData.experiencias.map((exp, idx) => (
-      <div key={idx} className="mb-8 p-4 sm:p-6 bg-white rounded-xl shadow-md border border-gray-100 relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.cargo}</label>
-            <input
-              type="text"
-              value={exp.cargo}
-              onChange={(e) => handleArrayChange("experiencias", idx, "cargo", e.target.value)}
-              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              placeholder={t.placeholders.cargo}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.empresa}</label>
-            <input
-              type="text"
-              value={exp.empresa}
-              onChange={(e) => handleArrayChange("experiencias", idx, "empresa", e.target.value)}
-              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              placeholder={t.placeholders.empresa}
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.periodo}</label>
-            <input
-              type="text"
-              value={exp.periodo}
-              onChange={(e) => handleArrayChange("experiencias", idx, "periodo", e.target.value)}
-              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              placeholder={t.placeholders.periodo}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.tecnologias}</label>
-            <input
-              type="text"
-              value={exp.tecnologias}
-              onChange={(e) => handleArrayChange("experiencias", idx, "tecnologias", e.target.value)}
-              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              placeholder={t.placeholders.tecnologias}
-            />
-          </div>
-        </div>
-        
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.atividades}</label>
-          <textarea
-            value={exp.atividades}
-            onChange={(e) => handleArrayChange("experiencias", idx, "atividades", e.target.value)}
-            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            rows={3}
-            placeholder={t.placeholders.atividades}
-          />
-        </div>
-        
+const renderExperienceFields = () => {
+  return formData.experiencias.map((exp, idx) => (
+    <div key={idx} className="mb-8 p-4 sm:p-6 bg-white rounded-xl shadow-md border border-gray-100 relative">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.resultados}</label>
-          <textarea
-            value={exp.resultados}
-            onChange={(e) => handleArrayChange("experiencias", idx, "resultados", e.target.value)}
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.cargo}</label>
+          <input
+            type="text"
+            value={exp.cargo}
+            onChange={(e) => handleArrayChange("experiencias", idx, "cargo", e.target.value)}
             className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            rows={3}
-            placeholder={t.placeholders.resultados}
+            placeholder={t.placeholders.cargo}
           />
         </div>
-        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.empresa}</label>
+          <input
+            type="text"
+            value={exp.empresa}
+            onChange={(e) => handleArrayChange("experiencias", idx, "empresa", e.target.value)}
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            placeholder={t.placeholders.empresa}
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">Mês Início</label>
+    <select
+      value={exp.mesInicio}
+      onChange={(e) => handleArrayChange("experiencias", idx, "mesInicio", e.target.value)}
+      className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+    >
+      <option value="">Selecione</option>
+      {meses.map(mes => (
+        <option key={mes.valor} value={mes.valor}>{mes.label}</option>
+      ))}
+    </select>
+  </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">Ano Início</label>
+    <input
+      type="number"
+      min="1900"
+      max={new Date().getFullYear()}
+      value={exp.anoInicio}
+      onChange={(e) => handleArrayChange("experiencias", idx, "anoInicio", e.target.value)}
+      className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+      placeholder="Ano"
+    />
+  </div>
+  
+  {/* Campos de término - agora condicionais */}
+  {!exp.atual && (
+    <>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Mês Término</label>
+        <select
+          value={exp.mesFim}
+          onChange={(e) => handleArrayChange("experiencias", idx, "mesFim", e.target.value)}
+          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        >
+          <option value="">Selecione</option>
+          {meses.map(mes => (
+            <option key={mes.valor} value={mes.valor}>{mes.label}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Ano Término</label>
+        <input
+          type="number"
+          min="1900"
+          max={new Date().getFullYear()}
+          value={exp.anoFim}
+          onChange={(e) => handleArrayChange("experiencias", idx, "anoFim", e.target.value)}
+          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          placeholder="Ano"
+        />
+      </div>
+    </>
+  )}
+  
+  {/* Checkbox "Atual" estilizado */}
+  <div className={`flex items-center ${exp.atual ? 'md:col-span-2' : ''}`}>
+    <label className="inline-flex items-center mt-6 cursor-pointer">
+      <input
+        type="checkbox"
+        checked={exp.atual}
+        onChange={(e) => {
+          handleArrayChange("experiencias", idx, "atual", e.target.checked);
+          // Limpa campos de término se marcar como atual
+          if (e.target.checked) {
+            handleArrayChange("experiencias", idx, "mesFim", "");
+            handleArrayChange("experiencias", idx, "anoFim", "");
+          }
+        }}
+        className="sr-only peer"
+      />
+      <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+      <span className="ms-3 text-sm font-medium text-gray-700">Atual</span>
+    </label>
+  </div>
+</div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.tecnologias}</label>
+          <input
+            type="text"
+            value={exp.tecnologias}
+            onChange={(e) => handleArrayChange("experiencias", idx, "tecnologias", e.target.value)}
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            placeholder={t.placeholders.tecnologias}
+          />
+        </div>
+      </div>
+      
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.atividades}</label>
+        <textarea
+          value={exp.atividades}
+          onChange={(e) => handleArrayChange("experiencias", idx, "atividades", e.target.value)}
+          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          rows={3}
+          placeholder={t.placeholders.atividades}
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.resultados}</label>
+        <textarea
+          value={exp.resultados}
+          onChange={(e) => handleArrayChange("experiencias", idx, "resultados", e.target.value)}
+          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          rows={3}
+          placeholder={t.placeholders.resultados}
+        />
+      </div>
+      
+      <button
+        type="button"
+        onClick={() => removeField("experiencias", idx)}
+        className="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-500 hover:text-red-500 transition-colors"
+        title="Remover experiência"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+        </svg>
+      </button>
+    </div>
+  ));
+};
+
+const renderEducationFields = () => {
+  return formData.formacoes.map((form, idx) => (
+    <div key={idx} className="mb-8 p-4 sm:p-6 bg-white rounded-xl shadow-md border border-gray-100 relative">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.tipoFormacao}</label>
+          <select
+            value={form.tipo}
+            onChange={(e) => handleArrayChange("formacoes", idx, "tipo", e.target.value)}
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          >
+            {tiposCurso.map(tipo => (
+              <option key={tipo.valor} value={tipo.valor}>{tipo.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+          <select
+            value={form.status || "completo"}
+            onChange={(e) => handleArrayChange("formacoes", idx, "status", e.target.value)}
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          >
+            {statusFormacao.map(status => (
+              <option key={status.valor} value={status.valor}>{status.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.curso}</label>
+          <input
+            type="text"
+            value={form.curso}
+            onChange={(e) => handleArrayChange("formacoes", idx, "curso", e.target.value)}
+            className={`w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+              errors[`formacao_curso_${idx}`] ? "border-red-500" : ""
+            }`}
+            placeholder={t.placeholders.curso}
+          />
+          {errors[`formacao_curso_${idx}`] && (
+            <p className="text-red-500 text-xs mt-2">{errors[`formacao_curso_${idx}`]}</p>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.instituicao}</label>
+          <input
+            type="text"
+            value={form.instituicao}
+            onChange={(e) => handleArrayChange("formacoes", idx, "instituicao", e.target.value)}
+            className={`w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+              errors[`formacao_instituicao_${idx}`] ? "border-red-500" : ""
+            }`}
+            placeholder={t.placeholders.instituicao}
+          />
+          {errors[`formacao_instituicao_${idx}`] && (
+            <p className="text-red-500 text-xs mt-2">{errors[`formacao_instituicao_${idx}`]}</p>
+          )}
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Mês Início</label>
+          <select
+            value={form.mesInicio}
+            onChange={(e) => handleArrayChange("formacoes", idx, "mesInicio", e.target.value)}
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          >
+            <option value="">Selecione</option>
+            {meses.map(mes => (
+              <option key={mes.valor} value={mes.valor}>{mes.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Ano Início</label>
+          <input
+            type="number"
+            min="1900"
+            max={new Date().getFullYear()}
+            value={form.anoInicio}
+            onChange={(e) => handleArrayChange("formacoes", idx, "anoInicio", e.target.value)}
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            placeholder="Ano"
+          />
+        </div>
+        {form.status !== "andamento" && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Mês Término</label>
+              <select
+                value={form.mesFim}
+                onChange={(e) => handleArrayChange("formacoes", idx, "mesFim", e.target.value)}
+                className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              >
+                <option value="">Selecione</option>
+                {meses.map(mes => (
+                  <option key={mes.valor} value={mes.valor}>{mes.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Ano Término</label>
+              <input
+                type="number"
+                min="1900"
+                max={new Date().getFullYear()}
+                value={form.anoFim}
+                onChange={(e) => handleArrayChange("formacoes", idx, "anoFim", e.target.value)}
+                className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                placeholder="Ano"
+              />
+            </div>
+          </>
+        )}
+      </div>
+      
+      {/* Novo campo de descrição adicionado aqui */}
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Descrição (Opcional)</label>
+        <textarea
+          value={form.descricao}
+          onChange={(e) => handleArrayChange("formacoes", idx, "descricao", e.target.value)}
+          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          rows={3}
+          placeholder="Ex: TCC sobre inteligência artificial, disciplinas relevantes, projetos acadêmicos..."
+        />
+        <p className="text-xs text-gray-500 mt-1">Adicione detalhes relevantes sobre sua formação</p>
+      </div>
+
+      {formData.formacoes.length > 1 && (
         <button
           type="button"
-          onClick={() => removeField("experiencias", idx)}
+          onClick={() => removeField("formacoes", idx)}
           className="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-500 hover:text-red-500 transition-colors"
-          title="Remover experiência"
+          title="Remover formação"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
         </button>
-      </div>
-    ));
-  };
+      )}
+    </div>
+  ));
+};
 
-  const renderEducationFields = () => {
-    return formData.formacoes.map((form, idx) => (
-      <div key={idx} className="mb-8 p-4 sm:p-6 bg-white rounded-xl shadow-md border border-gray-100 relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4">
+const renderCertificationFields = () => {
+  return formData.certificacoes.map((cert, idx) => (
+    <div key={idx} className="mb-6 sm:mb-8 p-4 sm:p-6 bg-white rounded-xl shadow-md border border-gray-100 relative">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.certificacao}</label>
+          <input
+            type="text"
+            value={cert.titulo || ""}
+            onChange={(e) => handleArrayChange("certificacoes", idx, "titulo", e.target.value)}
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            placeholder={t.placeholders.certificacao}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Emissor/Instituição</label>
+          <input
+            type="text"
+            value={cert.emissor || ""}
+            onChange={(e) => handleArrayChange("certificacoes", idx, "emissor", e.target.value)}
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            placeholder="Ex: Udemy, Alura, AWS"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Data de Conclusão</label>
+          <input
+            type="text"
+            value={cert.data || ""}
+            onChange={(e) => handleArrayChange("certificacoes", idx, "data", e.target.value)}
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            placeholder="Ex: Jun 2023"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Carga Horária</label>
+          <input
+            type="text"
+            value={cert.cargaHoraria || ""}
+            onChange={(e) => handleArrayChange("certificacoes", idx, "cargaHoraria", e.target.value)}
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            placeholder="Ex: 40 horas"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Descrição</label>
+        <textarea
+          value={cert.descricao || ""}
+          onChange={(e) => handleArrayChange("certificacoes", idx, "descricao", e.target.value)}
+          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          rows={3}
+          placeholder="Ex: Curso focado em desenvolvimento de APIs REST com Node.js..."
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={() => removeField("certificacoes", idx)}
+        className="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-500 hover:text-red-500 transition-colors"
+        title="Remover certificação"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+        </svg>
+      </button>
+    </div>
+  ));
+};
+
+  const renderLinkFields = () => {
+  return formData.links.map((link, idx) => {
+    const redeSocial = tiposRedesSociais.find(t => t.valor === link.tipo);
+    
+    return (
+      <div key={idx} className="mb-4 p-4 bg-white rounded-xl shadow-sm border border-gray-100 relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.tipoFormacao}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Link</label>
             <select
-              value={form.tipo}
-              onChange={(e) => handleArrayChange("formacoes", idx, "tipo", e.target.value)}
-              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              value={link.tipo}
+              onChange={(e) => handleArrayChange("links", idx, "tipo", e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              {tiposCurso.map(tipo => (
+              {tiposRedesSociais.map(tipo => (
                 <option key={tipo.valor} value={tipo.valor}>{tipo.label}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.curso}</label>
-            <input
-              type="text"
-              value={form.curso}
-              onChange={(e) => handleArrayChange("formacoes", idx, "curso", e.target.value)}
-              className={`w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                errors[`formacao_curso_${idx}`] ? "border-red-500" : ""
-              }`}
-              placeholder={t.placeholders.curso}
-            />
-            {errors[`formacao_curso_${idx}`] && (
-              <p className="text-red-500 text-xs mt-2">{errors[`formacao_curso_${idx}`]}</p>
-            )}
+            <label className="block text-sm font-medium text-gray-700 mb-1">URL</label>
+            <div className="flex">
+              {redeSocial.prefixo && (
+                <span className="inline-flex items-center px-2 rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 text-gray-500 text-sm">
+                  {redeSocial.prefixo}
+                </span>
+              )}
+              <input
+                type="text"
+                value={link.url}
+                onChange={(e) => handleArrayChange("links", idx, "url", e.target.value)}
+                className={`flex-1 min-w-0 p-2 ${redeSocial.prefixo ? 'rounded-none rounded-r-lg' : 'rounded-lg'} border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                placeholder={`Ex: ${t.placeholders[link.tipo] || 'seu-usuario'}`}
+              />
+            </div>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.instituicao}</label>
-            <input
-              type="text"
-              value={form.instituicao}
-              onChange={(e) => handleArrayChange("formacoes", idx, "instituicao", e.target.value)}
-              className={`w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                errors[`formacao_instituicao_${idx}`] ? "border-red-500" : ""
-              }`}
-              placeholder={t.placeholders.instituicao}
-            />
-            {errors[`formacao_instituicao_${idx}`] && (
-              <p className="text-red-500 text-xs mt-2">{errors[`formacao_instituicao_${idx}`]}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t.campos.periodo}</label>
-            <input
-              type="text"
-              value={form.periodo}
-              onChange={(e) => handleArrayChange("formacoes", idx, "periodo", e.target.value)}
-              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              placeholder={t.placeholders.periodo}
-            />
-          </div>
-        </div>
-        
-        {formData.formacoes.length > 1 && (
-          <button
-            type="button"
-            onClick={() => removeField("formacoes", idx)}
-            className="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-500 hover:text-red-500 transition-colors"
-            title="Remover formação"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => removeField("links", idx)}
+          className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+          title="Remover link"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+        </button>
       </div>
-    ));
-  };
+    );
+  });
+};
 
   const renderLanguageFields = () => {
     return formData.idiomas.map((idioma, idx) => (
@@ -1272,144 +1796,143 @@ const gerarPDF = async () => {
         
         <form onSubmit={(e) => { e.preventDefault(); gerarPDF(); }} className="space-y-6 sm:space-y-8">
           {/* Seção de Informações Pessoais */}
-          <div id="info" className={`space-y-4 sm:space-y-6 ${activeSection !== "info" && "hidden"}`}>
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              {t.campos.nome.split("*")[0]}
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.nome}</label>
-                <input
-                  type="text"
-                  name="nome"
-                  value={formData.nome}
-                  onChange={handleChange}
-                  className={`w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                    errors.nome ? "border-red-500" : ""
-                  }`}
-                  placeholder={t.placeholders.nome}
-                />
-                {errors.nome && <p className="text-red-500 text-xs mt-1 sm:mt-2">{errors.nome}</p>}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.cargoDesejado}</label>
-                <input
-                  type="text"
-                  name="cargoDesejado"
-                  value={formData.cargoDesejado}
-                  onChange={handleChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder={t.placeholders.cargoDesejado}
-                />
-              </div>
-            </div>
-            
-            {/* Telefone com DDD e código do país */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.codigoPais}</label>
-                <select
-                  name="codigoPais"
-                  value={formData.codigoPais}
-                  onChange={handleChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                >
-                  {paisesTelefone.map(pais => (
-                    <option key={pais.codigo} value={pais.codigo}>{pais.nome}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.ddd}</label>
-                <input
-                  type="text"
-                  name="ddd"
-                  value={formData.ddd}
-                  onChange={handleChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder={t.placeholders.ddd}
-                  maxLength="2"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.telefone}</label>
-                <input
-                  type="tel"
-                  name="telefone"
-                  value={formData.telefone}
-                  onChange={handleChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder={t.placeholders.telefone}
-                />
-              </div>
-            </div>
-            
-            {/* Cidade, LinkedIn e Portfolio */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.cidade}</label>
-                <input
-                  type="text"
-                  name="cidade"
-                  value={formData.cidade}
-                  onChange={handleChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder={t.placeholders.cidade}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.linkedin}</label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-2 sm:px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 text-gray-500 text-xs sm:text-sm">
-                    linkedin.com/in/
-                  </span>
-                  <input
-                    type="text"
-                    name="linkedin"
-                    value={formData.linkedin}
-                    onChange={handleChange}
-                    className="flex-1 min-w-0 block w-full p-2 sm:p-3 rounded-none rounded-r-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    placeholder={t.placeholders.linkedin}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.portfolio}</label>
-                <input
-                  type="text"
-                  name="portfolio"
-                  value={formData.portfolio}
-                  onChange={handleChange}
-                  className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder={t.placeholders.portfolio}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.email}</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                  errors.email ? "border-red-500" : ""
-                }`}
-                placeholder={t.placeholders.email}
-              />
-              {errors.email && <p className="text-red-500 text-xs mt-1 sm:mt-2">{errors.email}</p>}
-            </div>
-          </div>
+<div id="info" className={`space-y-4 sm:space-y-6 ${activeSection !== "info" && "hidden"}`}>
+  <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+    Informações Pessoais
+  </h2>
+  
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.nome}</label>
+      <input
+        type="text"
+        name="nome"
+        value={formData.nome}
+        onChange={handleChange}
+        className={`w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+          errors.nome ? "border-red-500" : ""
+        }`}
+        placeholder={t.placeholders.nome}
+      />
+      {errors.nome && <p className="text-red-500 text-xs mt-1 sm:mt-2">{errors.nome}</p>}
+    </div>
+    
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.cargoDesejado}</label>
+      <input
+        type="text"
+        name="cargoDesejado"
+        value={formData.cargoDesejado}
+        onChange={handleChange}
+        className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        placeholder={t.placeholders.cargoDesejado}
+      />
+    </div>
+  </div>
+  
+  {/* Telefone com DDD e código do país */}
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.codigoPais}</label>
+      <select
+        name="codigoPais"
+        value={formData.codigoPais}
+        onChange={handleChange}
+        className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+      >
+        {paisesTelefone.map(pais => (
+          <option key={pais.codigo} value={pais.codigo}>{pais.nome}</option>
+        ))}
+      </select>
+    </div>
+    
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.ddd}</label>
+      <input
+        type="text"
+        name="ddd"
+        value={formData.ddd}
+        onChange={handleChange}
+        className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        placeholder={t.placeholders.ddd}
+        maxLength="2"
+      />
+    </div>
+    
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.telefone}</label>
+      <input
+        type="tel"
+        name="telefone"
+        value={formData.telefone}
+        onChange={handleChange}
+        className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        placeholder={t.placeholders.telefone}
+      />
+    </div>
+  </div>
+  
+  {/* Email e Cidade */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.email}</label>
+      <input
+        type="email"
+        name="email"
+        value={formData.email}
+        onChange={handleChange}
+        className={`w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+          errors.email ? "border-red-500" : ""
+        }`}
+        placeholder={t.placeholders.email}
+      />
+      {errors.email && <p className="text-red-500 text-xs mt-1 sm:mt-2">{errors.email}</p>}
+    </div>
+    
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.cidade}</label>
+      <input
+        type="text"
+        name="cidade"
+        value={formData.cidade}
+        onChange={handleChange}
+        className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        placeholder={t.placeholders.cidade}
+      />
+    </div>
+  </div>
+  
+  {/* Links de redes sociais */}
+  <div className="mt-4">
+    <div className="flex justify-between items-center mb-3">
+      <h3 className="text-sm font-medium text-gray-700">Links e Redes Sociais</h3>
+      <button
+        type="button"
+        onClick={() => addField("links", { tipo: "linkedin", url: "" })}
+        className="flex items-center text-blue-600 hover:text-blue-800 text-sm"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+        </svg>
+        Adicionar Link
+      </button>
+    </div>
+    
+    {formData.links.length > 0 ? (
+      renderLinkFields()
+    ) : (
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        </svg>
+        <p className="mt-2 text-sm text-gray-500">Nenhum link adicionado</p>
+      </div>
+    )}
+  </div>
+</div>
           
           {/* Resumo Profissional */}
           <div id="resumo" className={`space-y-4 sm:space-y-6 ${activeSection !== "resumo" && "hidden"}`}>
@@ -1479,7 +2002,17 @@ const gerarPDF = async () => {
               </h2>
               <button
                 type="button"
-                onClick={() => addField("formacoes", { tipo: "superior", curso: "", instituicao: "", periodo: "" })}
+                onClick={() => addField("formacoes", { 
+  tipo: "superior", 
+  curso: "", 
+  instituicao: "", 
+  mesInicio: "",
+  anoInicio: "",
+  mesFim: "",
+  anoFim: "",
+  emAndamento: false,
+  descricao: "" // Novo campo
+})}
                 className="flex items-center bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors w-full sm:w-auto justify-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -1563,63 +2096,42 @@ const gerarPDF = async () => {
           
           {/* Certificações */}
           <div id="certificacoes" className={`space-y-4 sm:space-y-6 ${activeSection !== "certificacoes" && "hidden"}`}>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>            {t.campos.certificacoes}
-          </h2>
-          <button
-            type="button"
-            onClick={() => addField("certificacoes", "")}
-            className="flex items-center bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors w-full sm:w-auto justify-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-            </svg>
-            {t.botoes.adicionarCertificacao}
-          </button>
-        </div>
+  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+    <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+      Certificações/Cursos
+    </h2>
+    <button
+      type="button"
+      onClick={() => addField("certificacoes", { 
+        titulo: "", 
+        emissor: "", 
+        data: "", 
+        cargaHoraria: "", 
+        descricao: "" 
+      })}
+      className="flex items-center bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors w-full sm:w-auto justify-center"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+      </svg>
+      Adicionar Certificação/Curso
+    </button>
+  </div>
 
-        {formData.certificacoes.length > 0 ? (
-          formData.certificacoes.map((cert, idx) => (
-            <div key={idx} className="mb-6 sm:mb-8 p-4 sm:p-6 bg-white rounded-xl shadow-md border border-gray-100 relative">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">{t.campos.certificacao}</label>
-                <input
-                  type="text"
-                  value={cert}
-                  onChange={(e) => {
-                    const newCerts = [...formData.certificacoes];
-                    newCerts[idx] = e.target.value;
-                    setFormData(prev => ({ ...prev, certificacoes: newCerts }));
-                  }}
-                  className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder={t.placeholders.certificacao}
-                />
-              </div>
-              
-              <button
-                type="button"
-                onClick={() => removeField("certificacoes", idx)}
-                className="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-500 hover:text-red-500 transition-colors"
-                title="Remover certificação"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          ))
-        ) : (
-          <div className="bg-gray-50 p-4 sm:p-6 rounded-lg border border-gray-200 text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            <p className="mt-2 text-sm text-gray-500">{t.mensagens.nenhumaCertificacao}</p>
-          </div>
-        )}
-      </div>
+  {formData.certificacoes.length > 0 ? (
+    renderCertificationFields()
+  ) : (
+    <div className="bg-gray-50 p-4 sm:p-6 rounded-lg border border-gray-200 text-center">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+      <p className="mt-2 text-sm text-gray-500">Nenhuma certificação ou curso adicionado (opcional)</p>
+    </div>
+  )}
+</div>
 
       {/* Navegação entre seções */}
       <div className="flex flex-col-reverse sm:flex-row justify-between pt-6 sm:pt-8 border-t border-gray-200 gap-4">
