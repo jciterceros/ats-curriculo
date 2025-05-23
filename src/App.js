@@ -2361,16 +2361,32 @@ const renderCertificationFields = () => {
         aria-label="Fechar modal"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+
         </svg>
       </button>
 
       {/* Conteúdo principal */}
       <div className="text-center mb-6">
-        <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+        <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 animate-bounce">
+
           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+
+  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 
+
+           2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09
+
+           C13.09 3.81 14.76 3 16.5 3 
+
+           19.58 3 22 5.42 22 8.5 
+
+           c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+
+</svg>
+
+
+
         </div>
         
         <h3 id="modal-title" className="text-2xl font-bold text-gray-800 mb-2">
