@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
+
 const sanitizeForATS = (text) => {
   if (!text) return text;
   if (typeof text !== 'string') return "";
@@ -33,6 +34,10 @@ const sanitizeForATS = (text) => {
 };
 
 function App() {
+
+  const [mostrarErro, setMostrarErro] = useState(true);
+
+
   // Opções de idioma para a aplicação
   const idiomasApp = [
     { codigo: "pt", nome: "Português", icone: "🇧🇷" },
@@ -1671,9 +1676,43 @@ const renderCertificationFields = () => {
       </div>
     ));
   };
+  
 
   return (
+    
     <div className="min-h-screen bg-gray-50">
+
+
+
+
+
+    {mostrarErro && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative m-4">
+          <strong className="font-bold">Erro:</strong>
+          <span className="block sm:inline ml-2">
+  Estou corrigindo um problema onde o PDF trava ao gerar duas páginas.
+</span>
+
+          <button
+            onClick={() => setMostrarErro(false)}
+            className="ml-4 bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded"
+          >
+            Continuar
+          </button>
+        </div>
+      )}
+    
+
+    
+
+
+
+
+
+
+
+
+    
       {/* Header moderno */}
       <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
