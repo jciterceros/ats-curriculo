@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 
@@ -517,33 +517,39 @@ const validateForm = () => {
   };
 };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+const handleChange = (e) => {
+  const { name, value } = e.target;
+  setFormData(prev => {
+    const newData = { ...prev, [name]: value };
+    saveFormDataToLocalStorage(newData);
+    return newData;
+  });
+};
 
-  const handleArrayChange = (field, index, name, value) => {
-    setFormData(prev => {
-      const newArray = [...prev[field]];
-      newArray[index] = { ...newArray[index], [name]: value };
-      return { ...prev, [field]: newArray };
-    });
-  };
+const handleArrayChange = (field, index, name, value) => {
+  setFormData(prev => {
+    const newArray = [...prev[field]];
+    newArray[index] = { ...newArray[index], [name]: value };
+    const newData = { ...prev, [field]: newArray };
+    saveFormDataToLocalStorage(newData);
+    return newData;
+  });
+};
 
-  const addField = (field, initialValue = "") => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: [...prev[field], typeof initialValue === "object" ? { ...initialValue } : initialValue]
-    }));
-  };
+const addField = (field, initialValue = "") => {
+  setFormData(prev => {
+    const newArray = [...prev[field], typeof initialValue === "object" ? { ...initialValue } : initialValue];
+    const newData = { ...prev, [field]: newArray };
+    saveFormDataToLocalStorage(newData);
+    return newData;
+  });
+};
 
-  // Certifique-se que após remover, o array não fique vazio
 const removeField = (field, index) => {
   setFormData(prev => {
     const newArray = [...prev[field]];
     newArray.splice(index, 1);
     
-    // Se for certificações e ficar vazio, adicione um objeto vazio
     if (field === "certificacoes" && newArray.length === 0) {
       newArray.push({ 
         titulo: "", 
@@ -554,7 +560,9 @@ const removeField = (field, index) => {
       });
     }
     
-    return { ...prev, [field]: newArray };
+    const newData = { ...prev, [field]: newArray };
+    saveFormDataToLocalStorage(newData);
+    return newData;
   });
 };
 
@@ -600,6 +608,29 @@ const removeField = (field, index) => {
   return lines;
 };
 
+ const [showLoadedMessage, setShowLoadedMessage] = useState(false);
+
+const saveFormDataToLocalStorage = (data) => {
+    try {
+      localStorage.setItem('resumeFormData', JSON.stringify(data));
+    } catch (error) {
+      console.error('Failed to save form data', error);
+    }
+  };
+
+  useEffect(() => {
+    const savedFormData = localStorage.getItem('resumeFormData');
+    if (savedFormData) {
+      try {
+        const parsedData = JSON.parse(savedFormData);
+        setFormData(parsedData);
+        setShowLoadedMessage(true);
+        setTimeout(() => setShowLoadedMessage(false), 3000);
+      } catch (error) {
+        console.error('Failed to parse saved form data', error);
+      }
+    }
+  }, []);
 
 
 const gerarPDF = async () => {
