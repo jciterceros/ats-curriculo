@@ -35,7 +35,8 @@ const sanitizeForATS = (text) => {
 
 function App() {
 
-  const [mostrarErro, setMostrarErro] = useState(true);
+  // aviso aqui bobão
+  const [mostrarErro, setMostrarErro] = useState(false);
 
 
   // Opções de idioma para a aplicação
@@ -650,7 +651,7 @@ const formatarMes = (numeroMes, idioma = 'pt') => {  // 'pt' como padrão
   try {
     // Criar novo documento PDF
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([595, 842]); // Tamanho A4 em pontos (72dpi)
+    let page = pdfDoc.addPage([595, 842]); // Tamanho A4 em pontos (72dpi)
     const { width, height } = page.getSize();
     
     // Configurações de fonte
@@ -683,18 +684,23 @@ const formatarMes = (numeroMes, idioma = 'pt') => {  // 'pt' como padrão
     };
     
     // Função para verificar se precisa de nova página
-    const checkForNewPage = (requiredSpace = lineHeight) => {
-      if (y - requiredSpace < minY) {
-        const newPage = pdfDoc.addPage([595, 842]);
-        y = height - marginY;
-        return newPage;
-      }
-      return null;
-    };
+const checkForNewPage = (requiredSpace = lineHeight) => {
+  if (y - requiredSpace < minY) {
+    const newPage = pdfDoc.addPage([595, 842]);
+    y = height - marginY;
+    return newPage; // Retorna a nova página
+  }
+  return page; // Retorna a página atual
+};
     
     // Função para desenhar título de seção (mais compacta)
     const drawSectionTitle = (title) => {
-      checkForNewPage(lineHeight * 1.5);
+      
+      const newPage = checkForNewPage(lineHeight * 1.5);
+if (newPage !== page) {
+  page = newPage;
+}
+
       page.drawText(title.toUpperCase(), {
         x: marginX,
         y,
@@ -716,7 +722,11 @@ const formatarMes = (numeroMes, idioma = 'pt') => {  // 'pt' como padrão
     const nome = sanitizeForATS(formData.nome);
     const cargo = sanitizeForATS(formData.cargoDesejado || '');
     
-    checkForNewPage(lineHeight * 2);
+    const newPage = checkForNewPage(lineHeight * 2);
+if (newPage !== page) {
+  page = newPage;
+}
+
     page.drawText(nome.toUpperCase(), {
       x: marginX,
       y,
@@ -808,7 +818,11 @@ const headerParts = [
 
 const header = headerParts.join('');
 
-    checkForNewPage(lineHeight * 1.5);
+    const newPage = checkForNewPage(lineHeight * 1.5);
+if (newPage !== page) {
+  page = newPage;
+}
+
     const headerLines = drawText(
       sanitizeForATS(header),
       marginX,
@@ -845,7 +859,12 @@ const header = headerParts.join('');
       
       if (atividades.length > 0) {
         atividades.forEach(atividade => {
-          checkForNewPage();
+
+          const newPage = checkForNewPage();
+if (newPage !== page) {
+  page = newPage;
+}
+
           page.drawText('•', {
             x: marginX,
             y: y + 1,
@@ -876,7 +895,10 @@ const header = headerParts.join('');
       
       if (resultados.length > 0) {
         resultados.forEach(resultado => {
-          checkForNewPage();
+          const newPage = checkForNewPage();
+if (newPage !== page) {
+  page = newPage;
+}
           page.drawText('•', {
             x: marginX,
             y: y + 1,
@@ -901,7 +923,10 @@ const header = headerParts.join('');
 
     if (idx < formData.experiencias.length - 1) {
       y -= 6;
-      checkForNewPage();
+      const newPage = checkForNewPage();
+if (newPage !== page) {
+  page = newPage;
+}
     }
   });
   y -= sectionGap;
@@ -944,7 +969,10 @@ if (formData.formacoes.some(f => f.curso || f.instituicao)) {
       }
 
 // Linha 1: Tipo de formação + curso (se houver)
-checkForNewPage();
+const newPage = checkForNewPage();
+if (newPage !== page) {
+  page = newPage;
+}
 const linha1 = form.curso ? `${tipoFormacao} ${form.curso}` : tipoFormacao;
 page.drawText(linha1, {
   x: marginX,
@@ -957,7 +985,10 @@ y -= lineHeight * 1.1;
 
       // Linha 2: Instituição (só se existir)
       if (form.instituicao) {
-        checkForNewPage();
+        const newPage = checkForNewPage();
+if (newPage !== page) {
+  page = newPage;
+}
         page.drawText(form.instituicao, {
           x: marginX,
           y,
@@ -1021,7 +1052,10 @@ y -= lineHeight * 1.1;
       
       // Desenhar coluna 1
       column1.forEach(skill => {
-        checkForNewPage();
+        const newPage = checkForNewPage();
+if (newPage !== page) {
+  page = newPage;
+}
         page.drawText('•', {
           x: marginX,
           y: currentY + 1,
@@ -1046,7 +1080,10 @@ y -= lineHeight * 1.1;
       if (column2.length > 0) {
         currentY = y; // Reset para topo
         column2.forEach(skill => {
-          checkForNewPage();
+          const newPage = checkForNewPage();
+if (newPage !== page) {
+  page = newPage;
+}
           page.drawText('•', {
             x: marginX + columnWidth + 10,
             y: currentY + 1,
@@ -1082,7 +1119,10 @@ y -= lineHeight * 1.1;
             idioma.idioma,
             idioma.nivel && `(${idioma.nivel})`
           ].filter(Boolean).join(" ");
-          checkForNewPage();
+          const newPage = checkForNewPage();
+if (newPage !== page) {
+  page = newPage;
+}
           page.drawText('•', {
             x: marginX,
             y: y + 1,
@@ -1113,7 +1153,10 @@ if (formData.certificacoes.some(c => c.titulo && c.titulo.trim())) {
   formData.certificacoes
     .filter(c => c.titulo && c.titulo.trim())
     .forEach(cert => {
-      checkForNewPage();
+      const newPage = checkForNewPage();
+if (newPage !== page) {
+  page = newPage;
+}
       
       // Título e Emissor
       const tituloEmissor = [
