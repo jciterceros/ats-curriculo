@@ -2380,7 +2380,7 @@ const renderCertificationFields = () => {
   Juntos, vamos mais longe!
 </h3>
 <p className="text-sm text-gray-500">
-  Sua contribuição me ajuda a manter este projeto gratuito e a melhorar ainda mais a experiência para todos.
+  Se o currículo não foi baixado automaticamente, clique em "Reportar um problema" e envie um e-mail. Lembre-se de que a doação é <strong>opcional</strong> e a geração do currículo é totalmente <strong>gratuita</strong>. Sua contribuição ajuda a manter este projeto no ar e a melhorar continuamente a experiência para todos.
 </p>
 
       </div>
