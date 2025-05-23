@@ -467,6 +467,7 @@ const tiposRedesSociais = [
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showGenerationAnimation, setShowGenerationAnimation] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
   // Obter textos traduzidos com base no idioma selecionado
   const t = textos[idiomaApp];
@@ -2334,9 +2335,6 @@ const renderCertificationFields = () => {
 
 
 
-
-
-
 {showPaymentModal && (
   <div
     className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
@@ -2346,161 +2344,203 @@ const renderCertificationFields = () => {
     onClick={(e) => {
       if (e.target === e.currentTarget) {
         setShowPaymentModal(false);
+        setShowConfirmationModal(false);
         setShowQRCode(false);
       }
     }}
   >
-    <div className="relative w-full max-w-md rounded-2xl bg-gradient-to-br from-white to-gray-50 p-4 sm:p-6 md:p-8 shadow-2xl animate-[fadeIn_0.3s_ease-out] border border-gray-200 mx-2">
-      
-      {/* Botão X com animação */}
+    <div className="relative w-full max-w-md rounded-2xl bg-gradient-to-br from-white to-gray-50 p-6 shadow-2xl animate-[fadeIn_0.3s_ease-out] border border-gray-200 mx-2">
+      {/* Botão X */}
       <button
         onClick={() => {
           setShowPaymentModal(false);
+          setShowConfirmationModal(false);
           setShowQRCode(false);
         }}
-        className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600 transition-all duration-200 hover:scale-110 focus:outline-none"
+        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-all duration-200 hover:scale-110"
         aria-label="Fechar modal"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
 
-      {/* Cabeçalho com ícone */}
-      <div className="text-center mb-4 sm:mb-6">
-        <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3 sm:mb-4 animate-bounce">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 
-                 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09
-                 C13.09 3.81 14.76 3 16.5 3 
-                 19.58 3 22 5.42 22 8.5 
-                 c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+      {/* Conteúdo principal */}
+      <div className="text-center mb-6">
+        <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
         
-        <h3 id="modal-title" className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 sm:mb-2">
-          Juntos, vamos mais longe!
+        <h3 id="modal-title" className="text-2xl font-bold text-gray-800 mb-2">
+          Apoie nosso trabalho
         </h3>
-        <p className="text-xs sm:text-sm text-gray-500">
-          Se o currículo não foi baixado automaticamente, clique em "Reportar um problema" e envie um e-mail. Lembre-se de que a doação é <strong>opcional</strong> e a geração do currículo é totalmente <strong>gratuita</strong>. Sua contribuição ajuda a manter este projeto no ar e a melhorar continuamente a experiência para todos.
+        <p className="text-sm text-gray-600">
+          Gostou do serviço? Considere fazer uma doação para nos ajudar a manter e melhorar a plataforma!
         </p>
       </div>
 
-      {/* QR Code com animação de entrada */}
-      {showQRCode && (
-        <div className="flex flex-col items-center mb-4 sm:mb-6 animate-[slideUp_0.4s_ease-out]">
-          <div className="relative p-2 bg-white rounded-xl shadow-lg ring-2 ring-blue-200/50">
-            <img
-              src="/qrcode.png"
-              alt="QR Code para doação via PIX"
-              className="w-36 h-36 sm:w-44 sm:h-44 object-contain rounded-lg"
-            />
-            <div className="absolute inset-0 rounded-lg border-2 border-dashed border-blue-200 animate-ping opacity-0 pointer-events-none"></div>
-          </div>
-          <p className="text-xs text-gray-400 mt-2">Escaneie o QR Code</p>
-        </div>
-      )}
-
-      {/* Mensagem motivacional */}
-      <div className={`text-center mb-4 sm:mb-6 transition-all duration-300 ${showQRCode ? 'opacity-100' : 'opacity-0 h-0'}`}>
-        <p className="text-xs sm:text-sm text-gray-600">
-          Cada doação, por menor que seja, ajuda a manter esse site no ar!
-        </p>
-      </div>
-
-      {/* Chave PIX (aparece após mostrar QR Code) */}
-      {showQRCode && (
-        <div className="mb-4 sm:mb-6 animate-[fadeIn_0.5s_ease-out]">
-          <div className="bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100">
-            <p className="text-xs font-medium text-blue-800 mb-1">Chave PIX (copiada automaticamente):</p>
-            <div className="flex items-center justify-between bg-white p-1 sm:p-2 rounded">
-              <p className="text-xs font-mono text-gray-700 break-all">80eb8e06-493b-4870-9dfc-47ed230c5d16</p>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z" />
-                <path d="M3 8a2 2 0 012-2v10h8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Botões com animações */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+      {/* Botões de ação */}
+      <div className="space-y-3">
         <button
-          onClick={() => {
-            setShowQRCode(true);
-            navigator.clipboard.writeText("80eb8e06-493b-4870-9dfc-47ed230c5d16");
-            
-            // Feedback visual
-            const button = document.getElementById('donate-button');
-            if (button) {
-              button.classList.add('animate-[pulse_0.5s_ease-in-out]');
-              setTimeout(() => {
-                button.classList.remove('animate-[pulse_0.5s_ease-in-out]');
-              }, 500);
-            }
-          }}
-          id="donate-button"
-          className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-medium rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base"
+          onClick={() => setShowConfirmationModal(true)}
+          className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-medium rounded-lg hover:shadow-md transition-all flex items-center justify-center gap-2"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Doar
         </button>
-
+        
         <button
-          onClick={async () => {
-            try {
-              // Captura os logs do console
-              const logs = [];
-              if (window.console && console.log) {
-                // Isso só funcionará se você tiver armazenado os logs anteriormente
-                // Ou se estiver em um ambiente de desenvolvimento
-                // Em produção, você precisaria de uma solução mais robusta
-                const consoleLogs = localStorage.getItem('consoleLogs') || 'Logs não disponíveis';
-                logs.push(consoleLogs);
-              }
-              
-              // Prepara o email com os logs
-              const subject = "Reportar Erro ou Sugestão";
-              const body = `Descreva o problema abaixo:\n\n---\nConsole logs:\n${logs.join('\n')}`;
-              const emailUrl = `mailto:codegabriel.ti@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-              
-              // Abre o cliente de email
-              window.location.href = emailUrl;
-              
-              // Feedback visual
-              const button = document.getElementById('report-button');
-              if (button) {
-                button.classList.add('animate-[shake_0.5s_ease-in-out]');
-                setTimeout(() => {
-                  button.classList.remove('animate-[shake_0.5s_ease-in-out]');
-                }, 500);
-              }
-            } catch (error) {
-              console.error('Erro ao enviar logs:', error);
-              // Fallback sem os logs
-              window.location.href = "mailto:codegabriel.ti@gmail.com?subject=Reportar%20Erro%20ou%20Sugestão";
-            }
+          onClick={() => {
+            window.location.href = "mailto:codegabriel.ti@gmail.com?subject=Problema%20com%20geração%20de%20currículo";
+            setShowPaymentModal(false);
           }}
-          id="report-button"
-          className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-gradient-to-r from-gray-600 to-gray-500 hover:from-gray-700 hover:to-gray-600 text-white font-medium rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base"
+          className="w-full px-4 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          Reportar Problema
+          Reportar um problema
         </button>
-      </div>
-
-      {/* Rodapé */}
-      <div className="mt-3 sm:mt-4 text-center">
-        <p className="text-xs text-gray-400">Obrigado por fazer parte dessa jornada conosco!</p>
       </div>
     </div>
   </div>
 )}
+
+{/* Modal de Confirmação */}
+{showConfirmationModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl animate-[fadeIn_0.3s_ease-out] border border-gray-200 mx-2">
+      <button
+        onClick={() => setShowConfirmationModal(false)}
+        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-all hover:scale-110"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      
+      <div className="mb-6">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Faça sua doação</h3>
+        
+        <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 mb-4">
+          <p className="text-sm text-yellow-800 text-center">
+            ⚠️ A contribuição <span className="font-bold">não é obrigatória</span> para gerar o currículo.<br />
+            Se seu currículo não foi gerado, clique em <span className="font-semibold">"Reportar um problema"</span>.
+          </p>
+        </div>
+        
+        <p className="text-sm text-gray-600 mb-4">
+          Sua doação ajuda a manter o serviço gratuito para todos e a implementar melhorias.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <button
+          onClick={() => {
+            setShowConfirmationModal(false);
+            setShowQRCode(true);
+          }}
+          className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-medium rounded-lg hover:shadow-md transition-all"
+        >
+          Continuar para doação
+        </button>
+        
+        <button
+          onClick={() => setShowConfirmationModal(false)}
+          className="w-full px-4 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all"
+        >
+          Voltar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+{/* Modal do QR Code */}
+{showQRCode && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl animate-[fadeIn_0.3s_ease-out] border border-gray-200 mx-2">
+      <button
+        onClick={() => setShowQRCode(false)}
+        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-all hover:scale-110"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      
+      <div className="text-center mb-2">
+        <h3 className="text-xl font-bold text-gray-800">Doação via PIX</h3>
+        <p className="text-sm text-gray-600">Escaneie o QR Code ou copie a chave</p>
+      </div>
+      
+      <div className="flex flex-col items-center mb-6">
+        <div className="p-4 bg-white rounded-xl shadow-lg ring-2 ring-blue-200/50 mb-4">
+          <img
+            src="/qrcode.png"
+            alt="QR Code para doação via PIX"
+            className="w-48 h-48 object-contain rounded-lg"
+          />
+        </div>
+        
+        <div 
+          className="w-full bg-blue-50 p-3 rounded-lg border border-blue-100 mb-4 cursor-pointer hover:bg-blue-100 transition-colors group"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText("80eb8e06-493b-4870-9dfc-47ed230c5d16");
+              alert("Chave PIX copiada com sucesso!");
+            } catch (err) {
+              console.error('Falha ao copiar:', err);
+              // Fallback para navegadores mais antigos
+              const textArea = document.createElement('textarea');
+              textArea.value = "80eb8e06-493b-4870-9dfc-47ed230c5d16";
+              document.body.appendChild(textArea);
+              textArea.select();
+              try {
+                document.execCommand('copy');
+                alert("Chave PIX copiada com sucesso!");
+              } catch (err) {
+                alert("Não foi possível copiar automaticamente. Por favor, copie manualmente.");
+              }
+              document.body.removeChild(textArea);
+            }
+          }}
+        >
+          <p className="text-xs font-medium text-blue-800 mb-1">Chave PIX (clique para copiar):</p>
+          <div className="flex items-center justify-between bg-white p-2 rounded">
+            <p className="text-xs font-mono text-gray-700 break-all">80eb8e06-493b-4870-9dfc-47ed230c5d16</p>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 group-hover:text-blue-500 transition-colors" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z" />
+              <path d="M3 8a2 2 0 012-2v10h8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+            </svg>
+          </div>
+        </div>
+        
+        <div className="bg-green-50 border border-green-100 rounded-lg p-3 w-full">
+          <p className="text-xs text-green-800 text-center">
+            Muito obrigado pelo seu apoio! ❤️<br />
+            Sua contribuição nos ajuda a continuar melhorando este projeto.
+          </p>
+        </div>
+      </div>
+      
+      <button
+        onClick={() => setShowQRCode(false)}
+        className="w-full px-4 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all"
+      >
+        Voltar
+      </button>
+    </div>
+  </div>
+)}
+
+
+
 
 
 {showLoadedMessage && (
