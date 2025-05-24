@@ -39,7 +39,7 @@ function App() {
   
 
   // aviso aqui bobão
-  const [mostrarErro, setMostrarErro] = useState(false);
+  const [mostrarErro, setMostrarErro] = useState(true);
 
 
   // Opções de idioma para a aplicação
@@ -1772,33 +1772,25 @@ const renderCertificationFields = () => {
 
 
 
-    {mostrarErro && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative m-4">
-          <strong className="font-bold">Erro:</strong>
-          <span className="block sm:inline ml-2">
-  Estou corrigindo um problema onde o PDF trava ao gerar duas páginas.
-</span>
+{mostrarErro && (
+  <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded relative m-4">
+    <strong className="font-bold">Atenção:</strong>
+    <span className="block sm:inline ml-2">
+      Estamos melhorando a geração de conteúdo com emojis e alguns caracteres especiais. Por enquanto, evite usá-los para garantir o funcionamento.
+    </span>
 
-          <button
-            onClick={() => setMostrarErro(false)}
-            className="ml-4 bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded"
-          >
-            Continuar
-          </button>
-        </div>
-      )}
-    
-
-    
-
-
-
-
-
-
+    <button
+      onClick={() => setMostrarErro(false)}
+      className="ml-4 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded"
+    >
+      Entendi
+    </button>
+  </div>
+)}
 
 
     
+
       {/* Header moderno */}
       <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
