@@ -2379,7 +2379,7 @@ const renderCertificationFields = () => {
         {/* Barra de progresso da doação - Textos invertidos */}
         <div className="mb-4">
           <div className="flex justify-between text-sm text-gray-600 mb-1">
-            <span>R$8,64 doados (ajustado manualmente)</span>
+            <span>R$13,64 doados (ajustado manualmente)</span>
             <span>Meta: R$40,00</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5">
