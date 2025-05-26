@@ -1,0 +1,87 @@
+{
+  "tituloApp": "Gerador de Currículo",
+  "subtituloApp": "Crie um currículo profissional em minutos",
+  "dicasATS": "Dicas para um currículo ATS-friendly",
+  "dicasLista": [
+    "Use palavras-chave relevantes para a vaga",
+    "Mantenha o formato simples e legível",
+    "Inclua métricas e resultados concretos",
+    "Destaque suas principais habilidades técnicas"
+  ],
+  "campos": {
+    "nome": "Nome Completo*",
+    "cargoDesejado": "Cargo Desejado",
+    "codigoPais": "Código do País",
+    "ddd": "DDD",
+    "telefone": "Telefone",
+    "cidade": "Cidade",
+    "linkedin": "LinkedIn",
+    "portfolio": "Portfolio/GitHub",
+    "email": "Email*",
+    "resumo": "Resumo Profissional*",
+    "experiencia": "Experiência Profissional",
+    "formacao": "Formação Acadêmica",
+    "habilidades": "Habilidades Técnicas",
+    "idiomas": "Idiomas",
+    "certificacoes": "Certificações",
+    "tipoFormacao": "Tipo de Formação",
+    "curso": "Curso*",
+    "instituicao": "Instituição*",
+    "periodo": "Período",
+    "cargo": "Cargo",
+    "empresa": "Empresa",
+    "tecnologias": "Tecnologias utilizadas",
+    "atividades": "Atividades realizadas",
+    "resultados": "Resultados alcançados (com métricas)",
+    "idioma": "Idioma",
+    "nivel": "Nível",
+    "certificacao": "Certificação"
+  },
+  "placeholders": {
+    "nome": "Ex: João da Silva",
+    "cargoDesejado": "Ex: Desenvolvedor Front-end React",
+    "ddd": "Ex: 11",
+    "telefone": "Ex: 99999-9999",
+    "cidade": "Ex: São Paulo, SP",
+    "linkedin": "seuperfil",
+    "portfolio": "Ex: github.com/seuuser",
+    "email": "Ex: seuemail@exemplo.com",
+    "resumo": "Ex: Desenvolvedor Front-end com 5 anos de experiência em React e TypeScript. Especializado em criar interfaces de usuário responsivas e acessíveis...",
+    "curso": "Ex: Bacharelado em Ciência da Computação",
+    "instituicao": "Ex: Universidade de São Paulo",
+    "periodo": "Ex: 2015 - 2019",
+    "cargo": "Ex: Desenvolvedor Front-end React",
+    "empresa": "Ex: Google Inc.",
+    "tecnologias": "Ex: React, TypeScript, Redux, Node.js",
+    "atividades": "Descreva suas responsabilidades (1 item por linha)",
+    "resultados": "Ex: Reduzi o tempo de carregamento em 40% através de...",
+    "habilidades": "Ex: JavaScript, React, Node.js, HTML/CSS, Git, AWS, Docker",
+    "idioma": "Ex: Inglês",
+    "certificacao": "Ex: Certificação AWS Cloud Practitioner"
+  },
+  "botoes": {
+    "adicionarExperiencia": "Adicionar Experiência",
+    "adicionarFormacao": "Adicionar Formação",
+    "adicionarIdioma": "Adicionar Idioma",
+    "adicionarCertificacao": "Adicionar Certificação",
+    "gerarCV": "Gerar Currículo em PDF"
+  },
+  "mensagens": {
+    "nenhumaExperiencia": "Nenhuma experiência adicionada (opcional)",
+    "nenhumIdioma": "Nenhum idioma adicionado (opcional)",
+    "nenhumaCertificacao": "Nenhuma certificação adicionada (opcional)",
+    "sucesso": "Currículo gerado com sucesso!",
+    "gerando": "Gerando Currículo..."
+  },
+  "secoesPDF": {
+    "resumo": "RESUMO",
+    "experiencia": "EXPERIÊNCIA",
+    "formacao": "FORMAÇÃO",
+    "habilidades": "HABILIDADES",
+    "idiomas": "IDIOMAS",
+    "certificacoes": "CERTIFICAÇÕES"
+  },
+  "niveisIdioma": [
+    "Básico", "Intermediário", "Avançado", "Fluente", "Nativo"
+  ]
+}
